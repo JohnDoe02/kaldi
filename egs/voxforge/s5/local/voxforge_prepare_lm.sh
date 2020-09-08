@@ -13,7 +13,7 @@ loctmp=$locdata/tmp
 echo "--- Preparing a corpus from test and train transcripts ..."
 
 # Language model order
-order=3
+order=2
 
 . utils/parse_options.sh
 

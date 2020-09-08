@@ -4,7 +4,7 @@
 # you can pick and choose.  Look at the RESULTS file..
 
 
-use_gpu=true  
+use_gpu=false 
 
 if $use_gpu; then
   # This example runs on top of "raw-fMLLR" features.

@@ -11,12 +11,11 @@ mfcc_config=conf/mfcc_hires.conf
 use_ivector=true # If false, it skips training ivector extractor and
                  # ivector extraction stages.
 online_cmvn_iextractor=false
+extractor=exp/nnet2${nnet_affix}/extractor
 
 . ./cmd.sh
 . ./path.sh
 . ./utils/parse_options.sh
-
-extractor=exp/nnet2${nnet_affix}/extractor
 
 if $use_gpu; then
   if ! cuda-compiled; then

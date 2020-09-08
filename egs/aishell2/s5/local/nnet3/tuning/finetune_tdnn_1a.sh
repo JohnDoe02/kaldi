@@ -14,8 +14,8 @@ dir=${src_dir}_${data_set}
 num_jobs_initial=1
 num_jobs_final=1
 num_epochs=5
-initial_effective_lrate=0.0005
-final_effective_lrate=0.00002
+initial_effective_lrate=0.00025
+final_effective_lrate=0.000025
 minibatch_size=1024
 
 stage=1
