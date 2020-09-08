@@ -89,7 +89,7 @@ echo "$0 $@"  # Print the command line for logging
 
 # dirs for src-to-tgt transfer experiment
 lang_dir=data/lang_chain_5n   # lang dir for target data.
-lang_src_tgt=data/lang_wsj_rm # This dir is prepared using phones.txt and lexicon from
+lang_src_tgt=data/lang        # This dir is prepared using phones.txt and lexicon from
                               # source(WSJ) and and wordlist and G.fst from target(RM)
 lat_dir=exp/chain_lats_wsj
 
@@ -172,7 +172,11 @@ fi
 
 if [ $stage -le 6 ]; then
   echo "$0: compute {den,normalization}.fst using weighted phone LM."
-  steps/nnet3/chain/make_weighted_den_fst.sh --cmd "$train_cmd" \
+echo  steps/nnet3/chain/make_weighted_den_fst.sh --cmd "$train_cmd" \
+    --num-repeats $phone_lm_scales \
+    --lm-opts '--num-extra-lm-states=200' \
+    $src_tree_dir $lat_dir $dir || exit 1;
+steps/nnet3/chain/make_weighted_den_fst.sh --cmd "$train_cmd" \
     --num-repeats $phone_lm_scales \
     --lm-opts '--num-extra-lm-states=200' \
     $src_tree_dir $lat_dir $dir || exit 1;
