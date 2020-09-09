@@ -106,7 +106,6 @@ if [ ! -z $src_ivec_extractor_dir ]; then
   else
     required_files="$required_files $src_ivec_extractor_dir/final.dubm $src_ivec_extractor_dir/final.mat $src_ivec_extractor_dir/final.ie"
     use_ivector=true
-		echo ivector configuration seems correct :D
   fi
 else
   if [ $ivector_dim -gt 0 ]; then
@@ -128,23 +127,15 @@ if [ $stage -le -1 ]; then
   else
     rm -rf $lang_src_tgt 2>/dev/null || true
     cp -r $lang_dir $lang_src_tgt
-		echo Preparation of RM phones seems correct, too :D
   fi
 fi
 
-
-echo calling local/online/run_nnet2_common.sh  --stage $stage \
-                                  --ivector-dim $ivector_dim \
-                                  --nnet-affix "$nnet_affix" \
-                                  --mfcc-config $src_mfcc_config \
-                                  --extractor $src_ivec_extractor_dir || exit 1;
 
 local/online/run_nnet2_common.sh  --stage $stage \
                                   --ivector-dim $ivector_dim \
                                   --nnet-affix "$nnet_affix" \
                                   --mfcc-config $src_mfcc_config \
                                   --extractor $src_ivec_extractor_dir || exit 1;
-echo REACHED MARK 1
 
 src_mdl_dir=`dirname $src_mdl`
 ivec_opt=""
@@ -203,6 +194,7 @@ if [ $stage -le 7 ]; then
     --trainer.input-model $dir/input.raw \
     --feat.online-ivector-dir "$ivector_dir" \
     --feat.cmvn-opts "--norm-means=false --norm-vars=false" \
+		--chain.frame-subsampling-factor 1 \
     --chain.xent-regularize 0.1 \
     --chain.leaky-hmm-coefficient 0.1 \
     --chain.l2-regularize 0.00005 \
@@ -210,13 +202,13 @@ if [ $stage -le 7 ]; then
     --egs.dir "$common_egs_dir" \
     --egs.opts "--frames-overlap-per-eg 0" \
     --egs.chunk-width 150 \
-    --trainer.num-chunk-per-minibatch=128 \
+    --trainer.num-chunk-per-minibatch=128,64,32 \
     --trainer.frames-per-iter 1000000 \
-    --trainer.num-epochs 2 \
+    --trainer.num-epochs 5 \
     --trainer.optimization.num-jobs-initial=2 \
-    --trainer.optimization.num-jobs-final=4 \
-    --trainer.optimization.initial-effective-lrate=0.005 \
-    --trainer.optimization.final-effective-lrate=0.0005 \
+    --trainer.optimization.num-jobs-final=2 \
+    --trainer.optimization.initial-effective-lrate=0.00025 \
+    --trainer.optimization.final-effective-lrate=0.000025 \
     --trainer.max-param-change 2.0 \
     --cleanup.remove-egs true \
     --feat-dir data/train_hires \
