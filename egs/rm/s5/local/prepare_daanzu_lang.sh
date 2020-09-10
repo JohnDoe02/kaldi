@@ -1,8 +1,14 @@
 #!/bin/bash
 
 mkdir -p data/lang/phones
-cp kaldi_model/* data/lang/
+cp kaldi_model/disambig.int data/lang/phones
+cp kaldi_model/words.txt data/lang/
+cp kaldi_model/phones.txt data/lang/
 cp kaldi_model/L_disambig.fst data/lang/L.fst
+#utils/make_lexicon_fst.pl kaldi_model/lexicon.txt 0.5 SIL | \
+#  fstcompile --isymbols=kaldi_model/phones.txt --osymbols=kaldi_model/words.txt \
+#  --keep_isymbols=false --keep_osymbols=false | \
+#   fstarcsort --sort_type=olabel > data/lang/L.fst
 echo 18 > data/lang/oov.int
 
 #echo "!OOV OOV" > data/local/lang/lexicon.txt
