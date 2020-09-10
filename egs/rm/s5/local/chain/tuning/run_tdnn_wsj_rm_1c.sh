@@ -202,11 +202,11 @@ if [ $stage -le 7 ]; then
     --egs.dir "$common_egs_dir" \
     --egs.opts "--frames-overlap-per-eg 0" \
     --egs.chunk-width 150 \
-    --trainer.num-chunk-per-minibatch=128,64,32 \
+    --trainer.num-chunk-per-minibatch=128,64,32,16,8 \
     --trainer.frames-per-iter 1000000 \
     --trainer.num-epochs 5 \
-    --trainer.optimization.num-jobs-initial=2 \
-    --trainer.optimization.num-jobs-final=2 \
+    --trainer.optimization.num-jobs-initial=3 \
+    --trainer.optimization.num-jobs-final=3 \
     --trainer.optimization.initial-effective-lrate=0.00025 \
     --trainer.optimization.final-effective-lrate=0.000025 \
     --trainer.max-param-change 2.0 \
