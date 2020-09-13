@@ -43,27 +43,27 @@ phone_lm_scales="1,10" # comma-separated list of positive integer multiplicities
                        # to give the RM data a higher weight).
 
 # model and dirs for source model used for transfer learning
-src_mdl=~/kaldi_model/final.mdl # input chain model
+src_mdl=kaldi_model/final.mdl # input chain model
                                                     # trained on source dataset (wsj) and
                                                     # this model is transfered to the target domain.
 
-src_mfcc_config=~/kaldi_model/conf/mfcc_hires.conf # mfcc config used to extract higher dim
+src_mfcc_config=kaldi_model/conf/mfcc_hires.conf # mfcc config used to extract higher dim
                                                   # mfcc features used for ivector training
                                                   # in source domain.
-src_ivec_extractor_dir=~/kaldi_model/ivector_extractor  # source ivector extractor dir used to extract ivector for
+src_ivec_extractor_dir=kaldi_model/ivector_extractor  # source ivector extractor dir used to extract ivector for
                          # source data and the ivector for target data is extracted using this extractor.
                          # It should be nonempty, if ivector is used in source model training.
 
-src_lang=~/kaldi_model/         # source lang directory used to train source model.
+src_lang=kaldi_model/         # source lang directory used to train source model.
                                 # new lang dir for transfer learning experiment is prepared
                                 # using source phone set phone.txt and lexicon.txt in src lang dir and
                                 # word.txt target lang dir.
-src_dict=~/kaldi_model/  # dictionary for source dataset containing lexicon.txt,
+src_dict=kaldi_model/  # dictionary for source dataset containing lexicon.txt,
                                             # nonsilence_phones.txt,...
                                             # lexicon.txt used to generate lexicon.txt for
                                             # src-to-tgt transfer.
 
-src_tree_dir=~/kaldi_model/ # chain tree-dir for src data;
+src_tree_dir=kaldi_model/ # chain tree-dir for src data;
                                          # the alignment in target domain is
                                          # converted using src-tree
 
