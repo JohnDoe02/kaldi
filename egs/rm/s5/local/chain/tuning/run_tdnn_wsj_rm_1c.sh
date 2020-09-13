@@ -162,12 +162,11 @@ if [ $stage -le 5 ]; then
 fi
 
 if [ $stage -le 6 ]; then
+	# Fix error on missing alignment files
+	cp $lat_dir/ali.*.gz $src_tree_dir
+
   echo "$0: compute {den,normalization}.fst using weighted phone LM."
-echo  steps/nnet3/chain/make_weighted_den_fst.sh --cmd "$train_cmd" \
-    --num-repeats $phone_lm_scales \
-    --lm-opts '--num-extra-lm-states=200' \
-    $src_tree_dir $lat_dir $dir || exit 1;
-steps/nnet3/chain/make_weighted_den_fst.sh --cmd "$train_cmd" \
+	steps/nnet3/chain/make_weighted_den_fst.sh --cmd "$train_cmd" \
     --num-repeats $phone_lm_scales \
     --lm-opts '--num-extra-lm-states=200' \
     $src_tree_dir $lat_dir $dir || exit 1;
@@ -188,13 +187,12 @@ if [ $stage -le 7 ]; then
   # tolerance used in chain egs generation using this lats should be 1 or 2 which is
   # (source_egs_tolerance/frame_subsampling_factor)
   # source_egs_tolerance = 5
-  chain_opts=(--chain.alignment-subsampling-factor=1 --chain.left-tolerance=1 --chain.right-tolerance=1)
+  chain_opts=(--chain.alignment-subsampling-factor=3 --chain.left-tolerance=1 --chain.right-tolerance=1)
   steps/nnet3/chain/train.py --stage $train_stage ${chain_opts[@]} \
     --cmd "$decode_cmd" \
     --trainer.input-model $dir/input.raw \
     --feat.online-ivector-dir "$ivector_dir" \
     --feat.cmvn-opts "--norm-means=false --norm-vars=false" \
-		--chain.frame-subsampling-factor 1 \
     --chain.xent-regularize 0.1 \
     --chain.leaky-hmm-coefficient 0.1 \
     --chain.l2-regularize 0.00005 \
@@ -204,7 +202,7 @@ if [ $stage -le 7 ]; then
     --egs.chunk-width 150 \
     --trainer.num-chunk-per-minibatch=128,64,32,16,8 \
     --trainer.frames-per-iter 1000000 \
-    --trainer.num-epochs 5 \
+    --trainer.num-epochs 1 \
     --trainer.optimization.num-jobs-initial=3 \
     --trainer.optimization.num-jobs-final=3 \
     --trainer.optimization.initial-effective-lrate=0.00025 \
