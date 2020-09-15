@@ -8,6 +8,7 @@ model_dir=kaldi_model
 silence_phone=SIL
 noise_phone=SPN
 noise_word="<unk>"
+graph_own_dir=$model_dir/graph_own
 
 mkdir -p $input_lang
 echo SIL > $input_lang/silence_phones.txt
@@ -22,10 +23,11 @@ cp $model_dir/phones.txt $input_lang
 cp $model_dir/lexicon.txt $input_lang
 cp $model_dir/lexiconp.txt $input_lang
 cp $model_dir/lexiconp_disambig.txt $input_lang
-echo utils/prepare_lang.sh --phone-symbol-table $input_lang/phones.txt \
-											$input_lang "$noise_word" $tmp_lang $output_lang
 utils/prepare_lang.sh --phone-symbol-table $input_lang/phones.txt \
 											$input_lang "$noise_word" $tmp_lang $output_lang
+cp $model_dir/G.fst $output_lang/
+
+utils/mkgraph.sh --self-loop-scale 1.0 $output_lang $model_dir $graph_own_dir || exit 1;
 
 mkdir -p $final_lang/phones
 cp $model_dir/disambig.int $final_lang/phones
@@ -37,11 +39,3 @@ cp $model_dir/G.fst $final_lang/
 echo "<unk>" > $final_lang/oov.txt
 echo 18 > $final_lang/oov.int
 
-#echo "!OOV OOV" > data/local/lang/lexicon.txt
-#cat kaldi_model/lexicon.txt >> data/local/lang/lexicon.txt
-#
-#echo "!OOV 1.0 OOV" > data/local/lang/lexiconp.txt
-#cat kaldi_model/lexiconp.txt >> data/local/lang/lexiconp.txt
-#
-#
-#utils/prepare_lang.sh data/local/lang '!OOV' data/local/ data/lang

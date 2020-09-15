@@ -190,6 +190,7 @@ if [ $stage -le 7 ]; then
   chain_opts=(--chain.alignment-subsampling-factor=3 --chain.left-tolerance=1 --chain.right-tolerance=1)
   steps/nnet3/chain/train.py --stage $train_stage ${chain_opts[@]} \
     --cmd "$decode_cmd" \
+		--use-gpu "false" \
     --trainer.input-model $dir/input.raw \
     --feat.online-ivector-dir "$ivector_dir" \
     --feat.cmvn-opts "--norm-means=false --norm-vars=false" \
