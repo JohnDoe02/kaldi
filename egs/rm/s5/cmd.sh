@@ -10,7 +10,7 @@
 # conf/queue.conf in http://kaldi-asr.org/doc/queue.html for more information,
 # or search for the string 'default_config' in utils/queue.pl or utils/slurm.pl.
 
-export use_gpu=0
+export use_gpu=false
 export train_cmd=run.pl
 export decode_cmd=run.pl
 # the use of cuda_cmd is deprecated, used only in 'nnet1',
