@@ -26,7 +26,7 @@ def createRecordingIds(recordings):
 def writeTextFile(text_file, ids, recognitions):
     f = open(text_file, "w")
     for id, recognition in zip(ids, recognitions):
-        f.write(id + " " + recognition + "\n")
+        f.write(id + " " + recognition.upper() + "\n")
     f.close()
 
 def writeSpeakerToGender(stg_file, speakers, gender):
