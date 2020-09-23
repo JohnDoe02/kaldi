@@ -50,7 +50,7 @@ if [ $stage -le 1 ]; then
 	arpa2fst --disambig-symbol=\#0 --read-symbol-table=$output_lang/words.txt \
 					 $tmp_lang/lm.arpa $output_lang/G.fst
 
-	# Alternatively use original grammar (incompatible with user lexicon)
+	# Alternatively use grammar shipped with daanzu model (incompatible with user lexicon)
 	# cp $model_dir/G.fst $output_lang
 
 	# Generate decoding graph aka HCLG.fst
