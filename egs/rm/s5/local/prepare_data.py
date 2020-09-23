@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 import os
 import pandas as pd
@@ -26,7 +26,7 @@ def createRecordingIds(recordings):
 def writeTextFile(text_file, ids, recognitions):
     f = open(text_file, "w")
     for id, recognition in zip(ids, recognitions):
-        f.write(id + " " + recognition.upper() + "\n")
+        f.write(id + " " + recognition + "\n")
     f.close()
 
 def writeSpeakerToGender(stg_file, speakers, gender):
