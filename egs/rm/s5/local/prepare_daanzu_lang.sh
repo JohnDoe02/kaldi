@@ -34,7 +34,7 @@ if [ $stage -le 0 ]; then
 	sort $model_dir/lexicon.txt $model_dir/user_lexicon.txt > $input_lang/lexicon.txt
 	cat $model_dir/user_lexicon.txt | sed "s/\(^[A-Za-z0-9-]*\>\)/\1 1.0/g" | sort $model_dir/lexiconp.txt - > $input_lang/lexiconp.txt
 
-	cp $model_dir/lexiconp_disambig.txt $input_lang
+	sort $model_dir/lexiconp_disambig.txt > $input_lang/lexiconp_disambig.txt
 
 	# Generate language model aka L.fst/L_disambig.fst
 	utils/prepare_lang.sh --phone-symbol-table $input_lang/phones.txt \
