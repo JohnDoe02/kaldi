@@ -160,3 +160,12 @@ GSYMS
 /src/**/CMakeLists.txt
 /build*
 .vscode
+
+# updates johndoe
+egs/rm/s5/kaldi_model
+egs/rm/s5/recordings
+egs/voxforge/s5/voxforge/
+src/matrix/t.bin
+tools/extras/env.sh
+tools/extras/python/
+tools/srilm.tar.gz
