@@ -31,10 +31,8 @@ if [ $stage -le 0 ]; then
 																					| sort -u > $input_lang/nonsilence_phones.txt
 	cp $model_dir/phones.txt $input_lang
 	cp $model_dir/nonterminals.txt $input_lang
-	cp $model_dir/lexicon.txt $input_lang
-	cat $model_dir/user_lexicon.txt >> $input_lang/lexicon.txt
-	cp $model_dir/lexiconp.txt $input_lang
-	cat $model_dir/user_lexicon.txt | sed "s/\(^[A-Za-z0-9-]*\>\)/\1 1.0/g" >> $input_lang/lexiconp.txt
+	sort $model_dir/lexicon.txt $model_dir/user_lexicon.txt > $input_lang/lexicon.txt
+	cat $model_dir/user_lexicon.txt | sed "s/\(^[A-Za-z0-9-]*\>\)/\1 1.0/g" | sort $model_dir/lexiconp.txt - > $input_lang/lexiconp.txt
 
 	cp $model_dir/lexiconp_disambig.txt $input_lang
 
