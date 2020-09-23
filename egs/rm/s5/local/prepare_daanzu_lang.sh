@@ -28,6 +28,7 @@ if [ $stage -le 0 ]; then
 																					| awk "{ if(\$1 != \"$noise_phone\") print \$1; }" \
 																					| sort -u > $input_lang/nonsilence_phones.txt
 	cp $model_dir/phones.txt $input_lang
+	cp $model_dir/nonterminals.txt $input_lang
 	cp $model_dir/lexicon.txt $input_lang
 	cp $model_dir/lexiconp.txt $input_lang
 	cp $model_dir/lexiconp_disambig.txt $input_lang
