@@ -188,7 +188,7 @@ if [ $stage -le 7 ]; then
   # tolerance used in chain egs generation using this lats should be 1 or 2 which is
   # (source_egs_tolerance/frame_subsampling_factor)
   # source_egs_tolerance = 5
-  chain_opts=(--chain.alignment-subsampling-factor=3 --chain.left-tolerance=15 --chain.right-tolerance=15)
+  chain_opts=(--chain.alignment-subsampling-factor=3 --chain.left-tolerance=7 --chain.right-tolerance=7)
   steps/nnet3/chain/train.py --stage $train_stage ${chain_opts[@]} \
     --cmd "$decode_cmd" \
 		--use-gpu $use_gpu \
@@ -201,7 +201,7 @@ if [ $stage -le 7 ]; then
     --chain.apply-deriv-weights false \
     --egs.dir "$common_egs_dir" \
     --egs.opts "--frames-overlap-per-eg 0" \
-    --egs.chunk-width 50 \
+    --egs.chunk-width 20 \
     --trainer.num-chunk-per-minibatch=128,64,32,16,8 \
     --trainer.frames-per-iter 1000000 \
     --trainer.num-epochs 1 \
