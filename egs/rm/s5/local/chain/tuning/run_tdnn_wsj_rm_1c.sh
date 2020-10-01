@@ -163,11 +163,11 @@ if [ $stage -le 5 ]; then
 fi
 
 if [ $stage -le 6 ]; then
-	# Fix error on missing alignment files
-	cp $lat_dir/ali.*.gz $src_tree_dir
+  # Fix error on missing alignment files
+  cp $lat_dir/ali.*.gz $src_tree_dir
 
   echo "$0: compute {den,normalization}.fst using weighted phone LM."
-	steps/nnet3/chain/make_weighted_den_fst.sh --cmd "$train_cmd" \
+  steps/nnet3/chain/make_weighted_den_fst.sh --cmd "$train_cmd" \
     --num-repeats $phone_lm_scales \
     --lm-opts '--num-extra-lm-states=200' \
     $src_tree_dir $lat_dir $dir || exit 1;
@@ -191,7 +191,7 @@ if [ $stage -le 7 ]; then
   chain_opts=(--chain.alignment-subsampling-factor=3 --chain.left-tolerance=7 --chain.right-tolerance=7)
   steps/nnet3/chain/train.py --stage $train_stage ${chain_opts[@]} \
     --cmd "$decode_cmd" \
-		--use-gpu $use_gpu \
+    --use-gpu $use_gpu \
     --trainer.input-model $dir/input.raw \
     --feat.online-ivector-dir "$ivector_dir" \
     --feat.cmvn-opts "--norm-means=false --norm-vars=false" \
