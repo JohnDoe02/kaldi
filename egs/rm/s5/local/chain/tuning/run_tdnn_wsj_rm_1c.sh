@@ -201,7 +201,7 @@ if [ $stage -le 7 ]; then
     --chain.apply-deriv-weights false \
     --egs.dir "$common_egs_dir" \
     --egs.opts "--frames-overlap-per-eg 0" \
-    --egs.chunk-width 20 \
+    --egs.chunk-width 90,60,30 \
     --trainer.num-chunk-per-minibatch=128,64,32,16,8 \
     --trainer.frames-per-iter 1000000 \
     --trainer.num-epochs 1 \

@@ -4,19 +4,12 @@ import os
 import pandas as pd
 import numpy as np
 
-speaker = "abc123bca"
-gender = "m"
-recordings = pd.read_table("recordings/retain.tsv", header=0, 
-                           names=["File", "Length", "Rule", "Type", "Recognition",
-                                  "Rating", "Empty", "Unknown"])
-
 def createRecordingIds(recordings):
     recording_ids = []
 
     for name in recordings:
         name_begin = len(name) - name[::-1].find("/")
         name = name[name_begin:]
-        name = name.replace("_", "-")
         name = name.replace("retain-", "")
         name = name.replace(".wav", "")
         recording_ids.append(name)
@@ -41,12 +34,24 @@ def writeSpeakerToUtterance(stu_file, speakers, ids):
         f.write(speaker + " " + id + "\n")
     f.close()
 
+speaker = "speaker"
+gender = "m"
+recordings = pd.read_table("dataset/dataset.tsv", header=0, 
+                           names=["File", "Length", "Rule", "Type", "Recognition",
+                                  "Rating", "Empty", "Unknown", "Quality", "Source"])
+
 recordings["IDs"] = createRecordingIds(recordings["File"])
 recordings["Speaker"] = speaker + "-" + recordings["IDs"]
 
-train = recordings.sample(frac=0.8, random_state=1337)
-test = recordings.drop(train.index)
-train = recordings.drop(test.index)
+is_reviewed = recordings["Quality"] != "unknown"
+reviewed_recordings = recordings[is_reviewed]
+
+is_correct = recordings["Quality"] == "correct"
+dataset = recordings[is_correct]
+
+train = dataset.sample(frac=0.8, random_state=1337)
+test = dataset.drop(train.index)
+train = dataset.drop(test.index)
 
 if os.path.exists("./data"):
     print("ERROR: data directory already exists. Aborting")
