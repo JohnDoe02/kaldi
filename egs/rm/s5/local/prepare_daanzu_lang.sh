@@ -26,29 +26,29 @@ if [ $stage -le 0 ]; then
   echo NSN >> $input_lang/silence_phones.txt
   echo SIL > $input_lang/optional_silence.txt
   cut -d ' ' -f 2- $model_dir/lexicon.txt | sed 's/ /\n/g' \
-																					| awk "{ if(\$1 != \"$silence_phone\") print \$1; }" \
-																					| awk "{ if(\$1 != \"$noise_phone\") print \$1; }" \
-																					| sort -u > $input_lang/nonsilence_phones.txt
+                                          | awk "{ if(\$1 != \"$silence_phone\") print \$1; }" \
+                                          | awk "{ if(\$1 != \"$noise_phone\") print \$1; }" \
+                                          | sort -u > $input_lang/nonsilence_phones.txt
   cp $model_dir/phones.txt $input_lang
   cp $model_dir/nonterminals.txt $input_lang
   sort $model_dir/lexicon.txt $model_dir/user_lexicon.txt > $input_lang/lexicon.txt
   cat $model_dir/user_lexicon.txt | sed "s/\(^[A-Za-z0-9-]*\>\)/\1 1.0/g" \
-																	| sort $model_dir/lexiconp.txt - > $input_lang/lexiconp.txt
+                                  | sort $model_dir/lexiconp.txt - > $input_lang/lexiconp.txt
 
   sort $model_dir/lexiconp_disambig.txt > $input_lang/lexiconp_disambig.txt
 
   # Generate language model aka L.fst/L_disambig.fst
   utils/prepare_lang.sh --phone-symbol-table $input_lang/phones.txt \
-												$input_lang "$noise_word" $tmp_lang $output_lang
+                        $input_lang "$noise_word" $tmp_lang $output_lang
 fi
 
 # Create a corresponding grammar and decoding graph
 if [ $stage -le 1 ]; then
   # Generate a simple grammar aka G.fst
   ngram-count -order $lm_order -write-vocab $tmp_lang/vocab-full.txt \
-							-wbdiscount -text data/train/corpus.txt -lm $tmp_lang/lm.arpa
+              -wbdiscount -text data/train/corpus.txt -lm $tmp_lang/lm.arpa
   arpa2fst --disambig-symbol=\#0 --read-symbol-table=$output_lang/words.txt \
-					 $tmp_lang/lm.arpa $output_lang/G.fst
+           $tmp_lang/lm.arpa $output_lang/G.fst
 
   # Alternatively use grammar shipped with daanzu model (incompatible with user lexicon)
   # cp $model_dir/G.fst $output_lang
