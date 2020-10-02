@@ -54,11 +54,11 @@ src_ivec_extractor_dir=kaldi_model/ivector_extractor  # source ivector extractor
                          # source data and the ivector for target data is extracted using this extractor.
                          # It should be nonempty, if ivector is used in source model training.
 
-src_lang=kaldi_model/         # source lang directory used to train source model.
+src_lang=data/lang/         # source lang directory used to train source model.
                                 # new lang dir for transfer learning experiment is prepared
                                 # using source phone set phone.txt and lexicon.txt in src lang dir and
                                 # word.txt target lang dir.
-src_dict=kaldi_model/  # dictionary for source dataset containing lexicon.txt,
+src_dict=data/input/  # dictionary for source dataset containing lexicon.txt,
                                             # nonsilence_phones.txt,...
                                             # lexicon.txt used to generate lexicon.txt for
                                             # src-to-tgt transfer.
