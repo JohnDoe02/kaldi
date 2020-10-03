@@ -174,6 +174,7 @@ if [ $stage -le 6 ]; then
 fi
 
 if [ $stage -le 7 ]; then
+	start_time="$(date -u +%s)"
   if [[ $(hostname -f) == *.clsp.jhu.edu ]] && [ ! -d $dir/egs/storage ]; then
     utils/create_split_dir.pl \
      /export/b0{3,4,5,6}/$USER/kaldi-data/egs/rm-$(date +'%m_%d_%H_%M')/s5/$dir/egs/storage $dir/egs/storage
@@ -201,7 +202,7 @@ if [ $stage -le 7 ]; then
     --chain.apply-deriv-weights false \
     --egs.dir "$common_egs_dir" \
     --egs.opts "--frames-overlap-per-eg 0" \
-    --egs.chunk-width 90,60,30 \
+    --egs.chunk-width=150,110,100,40 \
     --trainer.num-chunk-per-minibatch=128,64,32,16,8 \
     --trainer.frames-per-iter 1000000 \
     --trainer.num-epochs 1 \
@@ -215,9 +216,19 @@ if [ $stage -le 7 ]; then
     --tree-dir $src_tree_dir \
     --lat-dir $lat_dir \
     --dir $dir || exit 1;
+
+	end_time="$(date -u +%s)"
+	elapsed="$(($end_time-$start_time))"
+	echo "[stage7 complete] $elapsed seconds elapsed"
 fi
 
 if [ $stage -le 8 ]; then
+	echo
+	echo '###################################################################'
+	echo '###################################################################'
+	echo "[stage8] Starting"
+	echo
+	start_time="$(date -u +%s)"
   # Note: it might appear that this $lang directory is mismatched, and it is as
   # far as the 'topo' is concerned, but this script doesn't read the 'topo' from
   # the lang directory.
@@ -229,6 +240,11 @@ if [ $stage -le 8 ]; then
     --scoring-opts "--min-lmwt 1" \
     --nj 20 --cmd "$decode_cmd" $test_ivec_opt \
     $dir/graph data/test_hires $dir/decode || exit 1;
+
+	end_time="$(date -u +%s)"
+	elapsed="$(($end_time-$start_time))"
+	echo "[stage8 complete] $elapsed seconds elapsed"
+	echo '###################################################################'
 fi
 wait;
 exit 0;
