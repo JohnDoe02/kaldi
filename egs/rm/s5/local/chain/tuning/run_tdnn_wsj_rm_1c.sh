@@ -54,11 +54,11 @@ src_ivec_extractor_dir=kaldi_model/ivector_extractor  # source ivector extractor
                          # source data and the ivector for target data is extracted using this extractor.
                          # It should be nonempty, if ivector is used in source model training.
 
-src_lang=kaldi_model/         # source lang directory used to train source model.
+src_lang=data/lang/         # source lang directory used to train source model.
                                 # new lang dir for transfer learning experiment is prepared
                                 # using source phone set phone.txt and lexicon.txt in src lang dir and
                                 # word.txt target lang dir.
-src_dict=kaldi_model/  # dictionary for source dataset containing lexicon.txt,
+src_dict=data/input/  # dictionary for source dataset containing lexicon.txt,
                                             # nonsilence_phones.txt,...
                                             # lexicon.txt used to generate lexicon.txt for
                                             # src-to-tgt transfer.
@@ -163,17 +163,18 @@ if [ $stage -le 5 ]; then
 fi
 
 if [ $stage -le 6 ]; then
-	# Fix error on missing alignment files
-	cp $lat_dir/ali.*.gz $src_tree_dir
+  # Fix error on missing alignment files
+  cp $lat_dir/ali.*.gz $src_tree_dir
 
   echo "$0: compute {den,normalization}.fst using weighted phone LM."
-	steps/nnet3/chain/make_weighted_den_fst.sh --cmd "$train_cmd" \
+  steps/nnet3/chain/make_weighted_den_fst.sh --cmd "$train_cmd" \
     --num-repeats $phone_lm_scales \
     --lm-opts '--num-extra-lm-states=200' \
     $src_tree_dir $lat_dir $dir || exit 1;
 fi
 
 if [ $stage -le 7 ]; then
+	start_time="$(date -u +%s)"
   if [[ $(hostname -f) == *.clsp.jhu.edu ]] && [ ! -d $dir/egs/storage ]; then
     utils/create_split_dir.pl \
      /export/b0{3,4,5,6}/$USER/kaldi-data/egs/rm-$(date +'%m_%d_%H_%M')/s5/$dir/egs/storage $dir/egs/storage
@@ -188,10 +189,10 @@ if [ $stage -le 7 ]; then
   # tolerance used in chain egs generation using this lats should be 1 or 2 which is
   # (source_egs_tolerance/frame_subsampling_factor)
   # source_egs_tolerance = 5
-  chain_opts=(--chain.alignment-subsampling-factor=3 --chain.left-tolerance=1 --chain.right-tolerance=1)
+  chain_opts=(--chain.alignment-subsampling-factor=3 --chain.left-tolerance=7 --chain.right-tolerance=7)
   steps/nnet3/chain/train.py --stage $train_stage ${chain_opts[@]} \
     --cmd "$decode_cmd" \
-		--use-gpu $use_gpu \
+    --use-gpu $use_gpu \
     --trainer.input-model $dir/input.raw \
     --feat.online-ivector-dir "$ivector_dir" \
     --feat.cmvn-opts "--norm-means=false --norm-vars=false" \
@@ -201,7 +202,7 @@ if [ $stage -le 7 ]; then
     --chain.apply-deriv-weights false \
     --egs.dir "$common_egs_dir" \
     --egs.opts "--frames-overlap-per-eg 0" \
-    --egs.chunk-width 150 \
+    --egs.chunk-width=150,110,100,40 \
     --trainer.num-chunk-per-minibatch=128,64,32,16,8 \
     --trainer.frames-per-iter 1000000 \
     --trainer.num-epochs 1 \
@@ -215,9 +216,19 @@ if [ $stage -le 7 ]; then
     --tree-dir $src_tree_dir \
     --lat-dir $lat_dir \
     --dir $dir || exit 1;
+
+	end_time="$(date -u +%s)"
+	elapsed="$(($end_time-$start_time))"
+	echo "[stage7 complete] $elapsed seconds elapsed"
 fi
 
 if [ $stage -le 8 ]; then
+	echo
+	echo '###################################################################'
+	echo '###################################################################'
+	echo "[stage8] Starting"
+	echo
+	start_time="$(date -u +%s)"
   # Note: it might appear that this $lang directory is mismatched, and it is as
   # far as the 'topo' is concerned, but this script doesn't read the 'topo' from
   # the lang directory.
@@ -229,6 +240,11 @@ if [ $stage -le 8 ]; then
     --scoring-opts "--min-lmwt 1" \
     --nj 20 --cmd "$decode_cmd" $test_ivec_opt \
     $dir/graph data/test_hires $dir/decode || exit 1;
+
+	end_time="$(date -u +%s)"
+	elapsed="$(($end_time-$start_time))"
+	echo "[stage8 complete] $elapsed seconds elapsed"
+	echo '###################################################################'
 fi
 wait;
 exit 0;
