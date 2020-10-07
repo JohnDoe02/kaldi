@@ -10,7 +10,8 @@ def createRecordingIds(recordings):
     for name in recordings:
         name_begin = len(name) - name[::-1].find("/")
         name = name[name_begin:]
-        name = name.replace("retain-", "")
+        name = name.replace("recording_", "")
+        name = name.replace("retain_", "")
         name = name.replace(".wav", "")
         recording_ids.append(name)
 
@@ -37,21 +38,16 @@ def writeSpeakerToUtterance(stu_file, speakers, ids):
 speaker = "speaker"
 gender = "m"
 recordings = pd.read_table("dataset/dataset.tsv", header=0, 
-                           names=["File", "Length", "Rule", "Type", "Recognition",
-                                  "Rating", "Empty", "Unknown", "Quality", "Source"])
+                           names=["File", "Length", "Directory", "Recognition"])
 
 recordings["IDs"] = createRecordingIds(recordings["File"])
 recordings["Speaker"] = speaker + "-" + recordings["IDs"]
 
-is_reviewed = recordings["Quality"] != "unknown"
-reviewed_recordings = recordings[is_reviewed]
-
-is_correct = recordings["Quality"] == "correct"
-dataset = recordings[is_correct]
+dataset = recordings
 
 train = dataset.sample(frac=0.8, random_state=1337)
-test = dataset.drop(train.index)
-train = dataset.drop(test.index)
+test = dataset.drop(train.index).sort_values(by="IDs")
+train = dataset.drop(test.index).sort_values(by="IDs")
 
 if os.path.exists("./data"):
     print("ERROR: data directory already exists. Aborting")
