@@ -18,8 +18,8 @@ data_set=train
 data_dir=data/${data_set}
 # ali_dir=exp/${data_set}_ali
 lat_dir=exp/${data_set}_lats
-src_dir=exp/nnet3_chain/tdnn_f-2.1ep
-tree_dir=exp/nnet3_chain/tree_sp
+src_dir=kaldi_model
+tree_dir=kaldi_model
 # dir=${src_dir}_${data_set}
 dir=exp/nnet3_chain/${data_set}
 
@@ -29,7 +29,7 @@ num_epochs=5
 # final_effective_lrate=0.00002
 initial_effective_lrate=.00025
 final_effective_lrate=.000025
-minibatch_size=1024
+minibatch_size=1024,512,256,128,64,32,16
 
 xent_regularize=0.1
 train_stage=-10
@@ -98,7 +98,7 @@ if [ $stage -le 2 ]; then
   #   ${data_dir}_sp_hires exp/nnet3_chain/extractor \
   #   exp/nnet3_chain/ivectors_${data_set}_sp_hires
   steps/online/nnet2/extract_ivectors_online.sh --cmd "$train_cmd" --nj 20 \
-    ${data_dir}_hires exp/nnet3_chain/extractor \
+    ${data_dir}_hires kaldi_model/ivector_extractor \
     exp/nnet3_chain/ivectors_${data_set}_hires
 fi
 
@@ -117,11 +117,14 @@ if [ $stage -le 4 ]; then
   # align new data(finetune set) with NN
   # steps/nnet3/align.sh --cmd "$train_cmd" --nj ${nj} ${data_dir} data/lang ${src_dir} ${ali_dir}
   steps/nnet3/align_lats.sh --cmd "$train_cmd" --nj ${nj} \
+    --generate-ali-from-lats true \
     --acoustic-scale 1.0 \
     --scale-opts '--transition-scale=1.0 --self-loop-scale=1.0' \
     --online-ivector-dir exp/nnet3_chain/ivectors_${data_set}_hires \
-    ${data_dir}_hires data/lang_chain ${src_dir} ${lat_dir}
+    ${data_dir}_hires data/lang ${src_dir} ${lat_dir}
   rm $lat_dir/fsts.*.gz # save space
+  # Fix error on missing alignment files
+  cp $lat_dir/ali.*.gz $src_dir
 fi
 
 if [ $stage -le 8 ]; then
@@ -138,7 +141,7 @@ if [ $stage -le 9 ]; then
   # tolerance used in chain egs generation using this lats should be 1 or 2 which is
   # (source_egs_tolerance/frame_subsampling_factor)
   # source_egs_tolerance = 5
-  chain_opts=(--chain.alignment-subsampling-factor=1 --chain.left-tolerance=1 --chain.right-tolerance=1)
+  chain_opts=(--chain.alignment-subsampling-factor=3 --chain.left-tolerance=7 --chain.right-tolerance=7)
 
   steps/nnet3/chain/train.py --stage $train_stage ${chain_opts[@]} \
     --cmd "$decode_cmd" \
