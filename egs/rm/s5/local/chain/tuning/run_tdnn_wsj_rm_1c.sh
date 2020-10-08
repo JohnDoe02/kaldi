@@ -165,6 +165,7 @@ fi
 if [ $stage -le 6 ]; then
   # Fix error on missing alignment files
   cp $lat_dir/ali.*.gz $src_tree_dir
+  cp $lat_dir/num_jobs $src_tree_dir
 
   echo "$0: compute {den,normalization}.fst using weighted phone LM."
   steps/nnet3/chain/make_weighted_den_fst.sh --cmd "$train_cmd" \
