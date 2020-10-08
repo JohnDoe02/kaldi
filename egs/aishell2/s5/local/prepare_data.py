@@ -10,7 +10,7 @@ def createRecordingIds(recordings):
     for name in recordings:
         name_begin = len(name) - name[::-1].find("/")
         name = name[name_begin:]
-        name = name.replace("recording_", "")
+        name = name.replace("recorder_", "")
         name = name.replace("retain_", "")
         name = name.replace(".wav", "")
         recording_ids.append(name)

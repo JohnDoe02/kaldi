@@ -14,7 +14,7 @@
 
 set -e
 
-data_set=finetune
+data_set=train
 data_dir=data/${data_set}
 # ali_dir=exp/${data_set}_ali
 lat_dir=exp/${data_set}_lats
@@ -62,7 +62,7 @@ if [ $stage -le 1 ]; then
   steps/compute_cmvn_stats.sh ${data_dir} exp/make_mfcc/${data_set} mfcc || exit 1;
   utils/fix_data_dir.sh ${data_dir} || exit 1;
 
-  utils/data/perturb_data_dir_speed_3way.sh ${data_dir} ${data_dir}_sp
+  utils/data/perturb_data_dir_speed_3way.sh --always-include-prefix true ${data_dir} ${data_dir}_sp
 
   # steps/make_mfcc.sh --cmd "$train_cmd" --nj 10 data/${train_set}_sp || exit 1;
   # steps/compute_cmvn_stats.sh data/${train_set}_sp || exit 1;
