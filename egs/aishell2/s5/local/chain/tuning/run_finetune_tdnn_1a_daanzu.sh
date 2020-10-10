@@ -14,22 +14,16 @@
 
 set -e
 
-data_set=train
-data_dir=data/${data_set}
-# ali_dir=exp/${data_set}_ali
-lat_dir=exp/${data_set}_lats
-src_dir=kaldi_model
-tree_dir=kaldi_model
-# dir=${src_dir}_${data_set}
-dir=exp/nnet3_chain/${data_set}
+train_set=train
+test_set=test
 
 num_gpus=1
-num_epochs=5
+num_epochs=1
 # initial_effective_lrate=0.0005
 # final_effective_lrate=0.00002
 initial_effective_lrate=.00025
 final_effective_lrate=.000025
-minibatch_size=1024,512,256,128,64,32,16
+minibatch_size=128,64,32,16
 
 xent_regularize=0.1
 train_stage=-10
@@ -53,6 +47,15 @@ echo "$0 $@"  # Print the command line for logging
 #     --cmd "$train_cmd" --nj $nj --mfcc-config conf/mfcc.conf \
 #     ${data_dir} exp/make_mfcc/${data_set} mfcc
 # fi
+
+data_set=${train_set}
+data_dir=data/${data_set}
+# ali_dir=exp/${data_set}_ali
+lat_dir=exp/${data_set}_lats
+src_dir=kaldi_model
+tree_dir=kaldi_model
+# dir=${src_dir}_${data_set}
+dir=exp/nnet3_chain/${data_set}
 
 if [ $stage -le 1 ]; then
   utils/fix_data_dir.sh ${data_dir} || exit 1;
@@ -124,7 +127,8 @@ if [ $stage -le 4 ]; then
     ${data_dir}_hires data/lang ${src_dir} ${lat_dir}
   rm $lat_dir/fsts.*.gz # save space
   # Fix error on missing alignment files
-  cp $lat_dir/ali.*.gz $src_dir
+  cp $lat_dir/ali.*.gz $tree_dir
+  cp $lat_dir/num_jobs $tree_dir
 fi
 
 if [ $stage -le 8 ]; then
@@ -159,7 +163,7 @@ if [ $stage -le 9 ]; then
     --egs.stage $get_egs_stage \
     --egs.opts "--frames-overlap-per-eg 0 --constrained false" \
     --egs.chunk-width $frames_per_eg \
-    --trainer.num-chunk-per-minibatch 288 \
+    --trainer.num-chunk-per-minibatch $minibatch_size \
     --trainer.frames-per-iter 1500000 \
     --trainer.num-epochs $num_epochs \
     --trainer.optimization.num-jobs-initial $num_gpus \
@@ -191,3 +195,49 @@ fi
 #     --ali-dir ${ali_dir} \
 #     --dir $dir || exit 1;
 # fi
+
+test_set=test
+if [ $stage -le 10 ]; then
+  echo "$0: creating high-resolution MFCC features for testing."
+  mfccdir=data/${test_set}_hires/data
+
+  for datadir in test; do
+    utils/copy_data_dir.sh data/$datadir data/${datadir}_hires
+
+    steps/make_mfcc.sh --nj 30 --mfcc-config conf/mfcc_hires.conf \
+      --cmd $train_cmd data/${datadir}_hires || exit 1;
+    steps/compute_cmvn_stats.sh data/${datadir}_hires
+    utils/fix_data_dir.sh data/${datadir}_hires
+  done
+
+  test_set=${test_set}_hires
+	steps/online/nnet2/extract_ivectors_online.sh --cmd "$train_cmd" --nj 10 \
+		data/${test_set} kaldi_model/ivector_extractor exp/nnet3_chain/ivectors_${test_set} || exit 1;
+
+fi
+
+if [ $stage -le 11 ]; then
+	echo
+	echo '###################################################################'
+	echo '###################################################################'
+	echo "[stage8] Starting"
+	echo
+	start_time="$(date -u +%s)"
+  # Note: it might appear that this $lang directory is mismatched, and it is as
+  # far as the 'topo' is concerned, but this script doesn't read the 'topo' from
+  # the lang directory.
+
+  utils/mkgraph.sh --self-loop-scale 1.0 data/lang $dir $dir/graph
+  steps/nnet3/decode.sh --acwt 1.0 --post-decode-acwt 10.0 \
+    --scoring-opts "--min-lmwt 1" \
+    --nj 20 --cmd "$decode_cmd" --online-ivector-dir exp/nnet3_chain/ivectors_test_hires \
+    $dir/graph data/test_hires $dir/decode || exit 1;
+
+	end_time="$(date -u +%s)"
+	elapsed="$(($end_time-$start_time))"
+	echo "[stage8 complete] $elapsed seconds elapsed"
+	echo '###################################################################'
+fi
+wait;
+exit 0;
+
