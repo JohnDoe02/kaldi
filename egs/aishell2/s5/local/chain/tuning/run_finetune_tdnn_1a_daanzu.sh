@@ -53,7 +53,7 @@ data_dir=data/${data_set}
 # ali_dir=exp/${data_set}_ali
 lat_dir=exp/${data_set}_lats
 src_dir=kaldi_model
-tree_dir=kaldi_model
+tree_dir=exp/tree_sp/
 # dir=${src_dir}_${data_set}
 dir=exp/nnet3_chain/${data_set}
 
@@ -127,8 +127,8 @@ if [ $stage -le 4 ]; then
     ${data_dir}_hires data/lang ${src_dir} ${lat_dir}
   rm $lat_dir/fsts.*.gz # save space
   # Fix error on missing alignment files
-  cp $lat_dir/ali.*.gz $tree_dir
-  cp $lat_dir/num_jobs $tree_dir
+  # cp $lat_dir/ali.*.gz $tree_dir
+  # cp $lat_dir/num_jobs $tree_dir
 fi
 
 if [ $stage -le 8 ]; then
