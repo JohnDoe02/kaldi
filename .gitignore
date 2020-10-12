@@ -169,3 +169,14 @@ src/matrix/t.bin
 tools/extras/env.sh
 tools/extras/python/
 tools/srilm.tar.gz
+.clangd/
+compile_commands.json
+dist/
+egs/aishell2/s5/dataset
+egs/aishell2/s5/experiment_1_21WER/
+egs/aishell2/s5/experiment_2_27WER/
+egs/aishell2/s5/experiment_3_17WER/
+egs/aishell2/s5/experiment_4_20WER/
+egs/aishell2/s5/kaldi_model/
+egs/mini_librispeech/s5/corpus/
+egs/rm/s5/dataset
