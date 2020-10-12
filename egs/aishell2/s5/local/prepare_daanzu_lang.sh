@@ -59,7 +59,7 @@ fi
 
 # Check decoding graph against test data
   cp $model_dir/final.mdl data/
-  test_ivec_opt="--online-ivector-dir exp/nnet2_online_wsj/ivectors_test"
+  test_ivec_opt="--online-ivector-dir exp/nnet3_chain/ivectors_test_hires"
   steps/nnet3/decode.sh --use-gpu $use_gpu --acwt 1.0 --post-decode-acwt 10.0 \
     --scoring-opts "--min-lmwt 1" \
     --nj 8 --cmd "$decode_cmd" $test_ivec_opt \

@@ -34,7 +34,7 @@ dropout_schedule='0,0@0.20,0.5@0.50,0'
 frames_per_eg=150,110,100,40
 
 stage=1
-nj=24
+nj=16
 
 echo "$0 $@"  # Print the command line for logging
 . ./path.sh
@@ -166,8 +166,8 @@ if [ $stage -le 9 ]; then
     --trainer.num-chunk-per-minibatch $minibatch_size \
     --trainer.frames-per-iter 1500000 \
     --trainer.num-epochs $num_epochs \
-    --trainer.optimization.num-jobs-initial $num_gpus \
-    --trainer.optimization.num-jobs-final $num_gpus \
+    --trainer.optimization.num-jobs-initial 3 \
+    --trainer.optimization.num-jobs-final 3 \
     --trainer.optimization.initial-effective-lrate $initial_effective_lrate \
     --trainer.optimization.final-effective-lrate $final_effective_lrate \
     --trainer.max-param-change 2.0 \
