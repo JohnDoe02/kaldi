@@ -1,4 +1,4 @@
-# !/bin/bash
+#!/bin/bash
 
 # Adapted from egs/aishell2/s5/local/nnet3/tuning/finetune_tdnn_1a.sh commit 42a673a5e7f201736dfbf2116e8eaa94745e5a5f
 
@@ -21,7 +21,7 @@ num_gpus=1
 num_epochs=1
 # initial_effective_lrate=0.0005
 # final_effective_lrate=0.00002
-initial_effective_lrate=.00025
+initial_effective_lrate=.00020
 final_effective_lrate=.000025
 minibatch_size=128,64,32,16
 
@@ -32,14 +32,15 @@ common_egs_dir=  # you can set this to use previously dumped egs.
 dropout_schedule='0,0@0.20,0.5@0.50,0'
 # frames_per_eg=150,110,100
 frames_per_eg=150,110,100,40
+phone_lm_scales=1,100
 
 stage=1
-nj=24
+nj=10
 
 echo "$0 $@"  # Print the command line for logging
 . ./path.sh
 . ./cmd.sh
-. ./utils/parse_options.sh
+. utils/parse_options.sh
 
 # if [ $stage -le 1 ]; then
 #   utils/fix_data_dir.sh ${data_dir} || exit 1;
@@ -53,7 +54,7 @@ data_dir=data/${data_set}
 # ali_dir=exp/${data_set}_ali
 lat_dir=exp/${data_set}_lats
 src_dir=kaldi_model
-tree_dir=exp/tree_sp/
+tree_dir=tree_sp
 # dir=${src_dir}_${data_set}
 dir=exp/nnet3_chain/${data_set}
 
@@ -126,9 +127,6 @@ if [ $stage -le 4 ]; then
     --online-ivector-dir exp/nnet3_chain/ivectors_${data_set}_hires \
     ${data_dir}_hires data/lang ${src_dir} ${lat_dir}
   rm $lat_dir/fsts.*.gz # save space
-  # Fix error on missing alignment files
-  # cp $lat_dir/ali.*.gz $tree_dir
-  # cp $lat_dir/num_jobs $tree_dir
 fi
 
 if [ $stage -le 8 ]; then
@@ -139,8 +137,15 @@ fi
 train_data_dir=${data_dir}_hires
 train_ivector_dir=exp/nnet3_chain/ivectors_${data_set}_hires
 
-
 if [ $stage -le 9 ]; then
+  echo "$0: compute {den,normalization}.fst using weighted phone LM."
+  steps/nnet3/chain/make_weighted_den_fst.sh --cmd "$train_cmd" \
+    --num-repeats $phone_lm_scales \
+    --lm-opts '--num-extra-lm-states=200' \
+    $tree_dir $lat_dir $dir || exit 1;
+fi
+
+if [ $stage -le 10 ]; then
   # we use chain model from source to generate lats for target and the
   # tolerance used in chain egs generation using this lats should be 1 or 2 which is
   # (source_egs_tolerance/frame_subsampling_factor)
@@ -197,7 +202,7 @@ fi
 # fi
 
 test_set=test
-if [ $stage -le 10 ]; then
+if [ $stage -le 11 ]; then
   echo "$0: creating high-resolution MFCC features for testing."
   mfccdir=data/${test_set}_hires/data
 
@@ -216,7 +221,7 @@ if [ $stage -le 10 ]; then
 
 fi
 
-if [ $stage -le 11 ]; then
+if [ $stage -le 12 ]; then
 	echo
 	echo '###################################################################'
 	echo '###################################################################'
