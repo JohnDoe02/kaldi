@@ -32,7 +32,7 @@ common_egs_dir=  # you can set this to use previously dumped egs.
 dropout_schedule='0,0@0.20,0.5@0.50,0'
 # frames_per_eg=150,110,100
 frames_per_eg=150,110,100,40
-phone_lm_scales=1,100
+phone_lm_scales=1,10
 
 stage=1
 nj=10
@@ -152,6 +152,7 @@ if [ $stage -le 10 ]; then
   # source_egs_tolerance = 5
   chain_opts=(--chain.alignment-subsampling-factor=3 --chain.left-tolerance=7 --chain.right-tolerance=7)
 
+	train_stage=-4
   steps/nnet3/chain/train.py --stage $train_stage ${chain_opts[@]} \
     --cmd "$decode_cmd" \
     --trainer.input-model $dir/input.raw \
