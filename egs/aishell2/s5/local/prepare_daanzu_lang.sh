@@ -32,7 +32,7 @@ if [ $stage -le 0 ]; then
   cp $model_dir/phones.txt $input_lang
   cp $model_dir/nonterminals.txt $input_lang
   sort $model_dir/lexicon.txt $model_dir/user_lexicon.txt > $input_lang/lexicon.txt
-  cat $model_dir/user_lexicon.txt | sed "s/\(^[A-Za-z0-9-]*\>\)/\1 1.0/g" \
+  cat $model_dir/user_lexicon.txt | sed "s/\(^['A-Za-z0-9-]*\)/\1 1.0/g" \
                                   | sort $model_dir/lexiconp.txt - > $input_lang/lexiconp.txt
 
   sort $model_dir/lexiconp_disambig.txt > $input_lang/lexiconp_disambig.txt
@@ -59,7 +59,7 @@ fi
 
 # Check decoding graph against test data
   cp $model_dir/final.mdl data/
-  test_ivec_opt="--online-ivector-dir exp/nnet3_chain/ivectors_test_hires"
+	test_ivec_opt="--online-ivector-dir exp/nnet3_chain/ivectors_test_hires"
   steps/nnet3/decode.sh --use-gpu $use_gpu --acwt 1.0 --post-decode-acwt 10.0 \
     --scoring-opts "--min-lmwt 1" \
     --nj 8 --cmd "$decode_cmd" $test_ivec_opt \
