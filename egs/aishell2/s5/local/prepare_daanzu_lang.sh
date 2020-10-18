@@ -56,11 +56,3 @@ if [ $stage -le 1 ]; then
   # Generate decoding graph aka HCLG.fst
   utils/mkgraph.sh --self-loop-scale 1.0 $output_lang $model_dir $graph_own_dir || exit 1;
 fi
-
-# Check decoding graph against test data
-  cp $model_dir/final.mdl data/
-	test_ivec_opt="--online-ivector-dir exp/nnet3_chain/ivectors_test_hires"
-  steps/nnet3/decode.sh --use-gpu $use_gpu --acwt 1.0 --post-decode-acwt 10.0 \
-    --scoring-opts "--min-lmwt 1" \
-    --nj 8 --cmd "$decode_cmd" $test_ivec_opt \
-    $graph_own_dir data/test_hires data/decode || exit 2;
