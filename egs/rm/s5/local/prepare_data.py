@@ -3,17 +3,19 @@
 import os
 import pandas as pd
 import numpy as np
+from random import randrange
 
-def createRecordingIds(recordings):
+def createRecordingIds(recordings, directory):
     recording_ids = []
 
-    for name in recordings:
+    for name, postfix in zip(recordings, directory):
         name_begin = len(name) - name[::-1].find("/")
         name = name[name_begin:]
-        name = name.replace("recording_", "")
+        name = name.replace("recorder_", "")
         name = name.replace("retain_", "")
         name = name.replace(".wav", "")
-        recording_ids.append(name)
+        prefix = "{0:07d}".format(randrange(0, 9999999))
+        recording_ids.append(prefix + "-" + name + "-" + postfix)
 
     return recording_ids
 
@@ -40,7 +42,7 @@ gender = "m"
 recordings = pd.read_table("dataset/dataset.tsv", header=0, 
                            names=["File", "Length", "Directory", "Recognition"])
 
-recordings["IDs"] = createRecordingIds(recordings["File"])
+recordings["IDs"] = createRecordingIds(recordings["File"], recordings["Directory"])
 recordings["Speaker"] = speaker + "-" + recordings["IDs"]
 
 dataset = recordings
