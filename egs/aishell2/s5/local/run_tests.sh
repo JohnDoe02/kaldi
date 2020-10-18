@@ -49,7 +49,7 @@ if [ $stage -le -1 ]; then
 		steps/nnet3/decode.sh --use-gpu $use_gpu --acwt 1.0 --post-decode-acwt 10.0 \
 			--scoring-opts "--min-lmwt 1" \
 			--nj ${nj} --cmd "$decode_cmd" $test_ivec_opt \
-			$graph_own_dir data/${test_set}_hires data/decode || exit 2;
+			$graph_own_dir data/${test_set}_hires data/decode_${test_set:5} || exit 2;
 	done
 fi
 
@@ -67,6 +67,6 @@ if [ $stage -le 1 ]; then
 		steps/nnet3/decode.sh --use-gpu $use_gpu --acwt 1.0 --post-decode-acwt 10.0 \
 			--scoring-opts "--min-lmwt 1" \
 			--nj ${nj} --cmd "$decode_cmd" --online-ivector-dir exp/nnet3_chain/ivectors_${test_set}_hires \
-			$dir/graph data/${test_set}_hires $dir/decode || exit 1;
+			$dir/graph data/${test_set}_hires $dir/decode_${test_set:5} || exit 1;
 	done
 fi
