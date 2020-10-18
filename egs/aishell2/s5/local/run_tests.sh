@@ -37,6 +37,9 @@ fi
 
 if [ $stage -le -1 ]; then
 	for test_set in data/test_*; do
+		if [[ "$test_set" =~ "_hires" ]]; then
+			continue
+		fi
 		test_set=${test_set:5}
 		# Score test data with reference model
 		cp $model_dir/final.mdl data/
