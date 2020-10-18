@@ -21,7 +21,7 @@ num_gpus=1
 num_epochs=1
 # initial_effective_lrate=0.0005
 # final_effective_lrate=0.00002
-initial_effective_lrate=.00020
+initial_effective_lrate=.00010
 final_effective_lrate=.000025
 minibatch_size=128,64,32,16
 
@@ -32,7 +32,8 @@ common_egs_dir=  # you can set this to use previously dumped egs.
 dropout_schedule='0,0@0.20,0.5@0.50,0'
 # frames_per_eg=150,110,100
 frames_per_eg=150,110,100,40
-phone_lm_scales=1,10
+phone_lm_scales=1,100
+primary_lr_factor=0.25
 
 stage=1
 nj=10
@@ -130,8 +131,18 @@ if [ $stage -le 4 ]; then
 fi
 
 if [ $stage -le 8 ]; then
-  $train_cmd $dir/log/generate_input_model.log \
-    nnet3-am-copy --raw=true $src_dir/final.mdl $dir/input.raw
+	echo "Reducing learning rate of non-output layers"
+  $train_cmd $dir/log/generate_input_mdl.log \
+    nnet3-am-copy --raw=true     $src_dir/final.mdl $dir/input.raw || exit 1;
+#--edits="\
+#			set-learning-rate-factor name=* learning-rate-factor=1.0;\
+#			set-learning-rate-factor name=tdnnf13* learning-rate-factor=1.00;\
+#			set-learning-rate-factor name=tdnnf14* learning-rate-factor=1.00;\
+#			set-learning-rate-factor name=tdnnf15* learning-rate-factor=1.0;\
+#			set-learning-rate-factor name=prefinal* learning-rate-factor=1.00;\
+#			set-learning-rate-factor name=prefinal-xent* learning-rate-factor=1.00;\
+#			set-learning-rate-factor name=output* learning-rate-factor=5.00;" \
+
 fi
 
 train_data_dir=${data_dir}_hires
@@ -143,6 +154,7 @@ if [ $stage -le 9 ]; then
     --num-repeats $phone_lm_scales \
     --lm-opts '--num-extra-lm-states=200' \
     $tree_dir $lat_dir $dir || exit 1;
+	#--num-extra-lm-states=2000 gave slightly worse results
 fi
 
 if [ $stage -le 10 ]; then
