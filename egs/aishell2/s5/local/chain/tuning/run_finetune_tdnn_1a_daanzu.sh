@@ -26,6 +26,8 @@ final_effective_lrate=.000025
 minibatch_size=128,64,32,16
 
 xent_regularize=0.1
+
+# Set to -5 to skip phone language model generation
 train_stage=-10
 get_egs_stage=-10
 common_egs_dir=  # you can set this to use previously dumped egs.
@@ -33,6 +35,8 @@ dropout_schedule='0,0@0.20,0.5@0.50,0'
 # frames_per_eg=150,110,100
 frames_per_eg=150,110,100,40
 
+# Set to exp/train_lats for alignment hack
+tree_dir=tree_sp/
 stage=1
 nj=16
 
@@ -53,7 +57,6 @@ data_dir=data/${data_set}
 # ali_dir=exp/${data_set}_ali
 lat_dir=exp/${data_set}_lats
 src_dir=kaldi_model
-tree_dir=exp/tree_sp/
 # dir=${src_dir}_${data_set}
 dir=exp/nnet3_chain/${data_set}
 
@@ -126,9 +129,6 @@ if [ $stage -le 4 ]; then
     --online-ivector-dir exp/nnet3_chain/ivectors_${data_set}_hires \
     ${data_dir}_hires data/lang ${src_dir} ${lat_dir}
   rm $lat_dir/fsts.*.gz # save space
-  # Fix error on missing alignment files
-  # cp $lat_dir/ali.*.gz $tree_dir
-  # cp $lat_dir/num_jobs $tree_dir
 fi
 
 if [ $stage -le 8 ]; then

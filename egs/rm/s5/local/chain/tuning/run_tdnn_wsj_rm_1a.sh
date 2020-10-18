@@ -22,14 +22,14 @@ dir=exp/chain/tdnn_wsj_rm_1a
 xent_regularize=0.1
 
 # configs for transfer learning
-src_mdl=../../wsj/s5/exp/chain/tdnn1d_sp/final.mdl # Input chain model
+src_mdl=kaldi_model/final.mdl # input chain model
                                                    # trained on source dataset (wsj).
                                                    # This model is transfered to the target domain.
 
-src_mfcc_config=../../wsj/s5/conf/mfcc_hires.conf # mfcc config used to extract higher dim
+src_mfcc_config=kaldi_model/conf/mfcc_hires.conf # mfcc config used to extract higher dim
                                                   # mfcc features for ivector and DNN training
                                                   # in the source domain.
-src_ivec_extractor_dir=  # Source ivector extractor dir used to extract ivector for
+src_ivec_extractor_dir=kaldi_model/ivector_extractor  # source ivector extractor dir used to extract ivector for
                          # source data. The ivector for target data is extracted using this extractor.
                          # It should be nonempty, if ivector is used in the source model training.
 
@@ -48,13 +48,13 @@ echo "$0 $@"  # Print the command line for logging
 . ./path.sh
 . ./utils/parse_options.sh
 
-if ! cuda-compiled; then
-  cat <<EOF && exit 1
-This script is intended to be used with GPUs but you have not compiled Kaldi with CUDA
-If you want to use GPUs (and have them), go to src/, and configure and make on a machine
-where "nvcc" is installed.
-EOF
-fi
+#if ! cuda-compiled; then
+#  cat <<EOF && exit 1
+#This script is intended to be used with GPUs but you have not compiled Kaldi with CUDA
+#If you want to use GPUs (and have them), go to src/, and configure and make on a machine
+#where "nvcc" is installed.
+#EOF
+#fi
 
 required_files="$src_mfcc_config $src_mdl"
 use_ivector=false
@@ -86,9 +86,9 @@ done
 # nnet3 setup, and you can skip them by setting "--stage 4" if you have already
 # run those things.
 
-ali_dir=exp/tri3b_ali
-treedir=exp/chain/tri4_5n_tree
-lang=data/lang_chain_5n
+ali_dir=tree_sp
+treedir=exp/tree_ft
+lang=data/lang
 
 local/online/run_nnet2_common.sh  --stage $stage \
                                   --ivector-dim $ivector_dim \
@@ -96,21 +96,26 @@ local/online/run_nnet2_common.sh  --stage $stage \
                                   --mfcc-config $src_mfcc_config \
                                   --extractor $src_ivec_extractor_dir || exit 1;
 
+ivec_opt=""
+if $use_ivector;then ivec_opt="--online-ivector-dir exp/nnet2${nnet_affix}/ivectors" ; fi
+src_mdl_dir=`dirname $src_mdl`
+
 if [ $stage -le 4 ]; then
   # Get the alignments as lattices (gives the chain training more freedom).
   # use the same num-jobs as the alignments
-  nj=$(cat $ali_dir/num_jobs) || exit 1;
-  steps/align_fmllr_lats.sh --nj $nj --cmd "$train_cmd" data/train \
-    data/lang exp/tri3b exp/tri3b_lats || exit 1;
-  rm exp/tri3b_lats/fsts.*.gz 2>/dev/null || true # save space
+  steps/nnet3/align_lats.sh --nj 100 --cmd "$train_cmd" $ivec_opt \
+    --generate-ali-from-lats true \
+    --acoustic-scale 1.0 --extra-left-context-initial 0 --extra-right-context-final 0 \
+    --frames-per-chunk 150 \
+    --scale-opts "--transition-scale=1.0 --self-loop-scale=1.0" \
+    data/train_hires data/lang $src_mdl_dir exp/train_lats || exit 1;
+  rm exp/train_lats/fsts.*.gz 2>/dev/null || true # save space
 fi
 
 if [ $stage -le 5 ]; then
   # Create a version of the lang/ directory that has one state per phone in the
   # topo file. [note, it really has two states.. the first one is only repeated
   # once, the second one has zero or more repeats.]
-  rm -r $lang 2>/dev/null || true
-  cp -r data/lang $lang
   silphonelist=$(cat $lang/phones/silence.csl) || exit 1;
   nonsilphonelist=$(cat $lang/phones/nonsilence.csl) || exit 1;
   # Use our special topology... note that later on may have to tune this
@@ -120,9 +125,10 @@ fi
 
 if [ $stage -le 6 ]; then
   # Build a tree using our new topology.
+	cp data/train_hires/feats.scp data/train
   steps/nnet3/chain/build_tree.sh --frame-subsampling-factor 3 \
     --leftmost-questions-truncate -1 \
-    --cmd "$train_cmd" 1200 data/train $lang $ali_dir $treedir || exit 1;
+    --cmd "$train_cmd" 1200 data/train_hires $lang $ali_dir $treedir || exit 1;
 fi
 
 if [ $stage -le 7 ]; then
@@ -131,15 +137,25 @@ if [ $stage -le 7 ]; then
   echo " are added to the transferred part of the wsj network.";
   num_targets=$(tree-info --print-args=false $treedir/tree |grep num-pdfs|awk '{print $2}')
   learning_rate_factor=$(echo "print (0.5/$xent_regularize)" | python)
+
+	# not checked against daanzu repot
+  tdnn_opts="l2-regularize=0.01 dropout-proportion=0.0 dropout-per-dim-continuous=true"
+  tdnnf_opts="l2-regularize=0.01 dropout-proportion=0.0 bypass-scale=0.66"
+  linear_opts="l2-regularize=0.01 orthonormal-constraint=-1.0"
+  prefinal_opts="l2-regularize=0.01"
+  output_opts="l2-regularize=0.005"
+
   mkdir -p $dir
   mkdir -p $dir/configs
   cat <<EOF > $dir/configs/network.xconfig
-  relu-renorm-layer name=tdnn-target input=Append(tdnn6.renorm@-3,tdnn6.renorm) dim=450
-  ## adding the layers for chain branch
-  relu-renorm-layer name=prefinal-chain input=tdnn-target dim=450 target-rms=0.5
-  output-layer name=output include-log-softmax=false dim=$num_targets max-change=1.5
-  relu-renorm-layer name=prefinal-xent input=tdnn-target dim=450 target-rms=0.5
-  output-layer name=output-xent dim=$num_targets learning-rate-factor=$learning_rate_factor max-change=1.5
+	tdnnf-layer name=tdnn-target input=Append(tdnnf15.renorm@-3,tdnnnf15.renorm) $tdnnf_opts dim=1536 bottleneck-dim=160 time-stride=3
+	linear-component name=prefinal-l dim=256 $linear_opts
+
+	prefinal-layer name=prefinal-chain input=prefinal-l $prefinal_opts big-dim=1536 small-dim=256
+	output-layer name=output include-log-softmax=false dim=$num_targets $output_opts
+
+	prefinal-layer name=prefinal-xent input=prefinal-l $prefinal_opts big-dim=1536 small-dim=256
+	output-layer name=output-xent dim=$num_targets learning-rate-factor=$learning_rate_factor $output_opts
 EOF
   steps/nnet3/xconfig_to_configs.py --existing-model $src_mdl \
     --xconfig-file  $dir/configs/network.xconfig  \
@@ -161,7 +177,8 @@ if [ $stage -le 8 ]; then
   ivector_dir=
   if $use_ivector; then ivector_dir="exp/nnet2${nnet_affix}/ivectors" ; fi
 
-  steps/nnet3/chain/train.py --stage $train_stage \
+  chain_opts=(--chain.alignment-subsampling-factor=3 --chain.left-tolerance=7 --chain.right-tolerance=7)
+  steps/nnet3/chain/train.py --stage $train_stage ${chain_opts[@]}\
     --cmd "$decode_cmd" \
     --trainer.input-model $dir/input.raw \
     --feat.online-ivector-dir "$ivector_dir" \
