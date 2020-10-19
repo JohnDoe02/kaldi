@@ -25,7 +25,7 @@ if [ $stage -le 0 ]; then
 
 		utils/copy_data_dir.sh data/$test_set data/${test_set}_hires
 
-		3teps/make_mfcc.sh --nj ${nj} --mfcc-config conf/mfcc_hires.conf \
+		steps/make_mfcc.sh --nj ${nj} --mfcc-config conf/mfcc_hires.conf \
 			--cmd $train_cmd data/${test_set}_hires || exit 1;
 		steps/compute_cmvn_stats.sh data/${test_set}_hires
 		utils/fix_data_dir.sh data/${test_set}_hires
@@ -48,7 +48,7 @@ if [ $stage -le -1 ]; then
 		test_ivec_opt="--online-ivector-dir exp/nnet3_chain/ivectors_${test_set}_hires"
 		steps/nnet3/decode.sh --use-gpu $use_gpu --acwt 1.0 --post-decode-acwt 10.0 \
 			--scoring-opts "--min-lmwt 1" \
-			--nj ${nj} --cmd "$decode_cmd" $test_ivec_opt \
+			--nj ${nj} --num-threads ${nj} --cmd "$decode_cmd" $test_ivec_opt \
 			$graph_own_dir data/${test_set}_hires data/decode_${test_set:5} || exit 2;
 	done
 fi
@@ -65,8 +65,8 @@ if [ $stage -le 1 ]; then
 		# the lang directory.
 		utils/mkgraph.sh --self-loop-scale 1.0 data/lang $dir $dir/graph
 		steps/nnet3/decode.sh --use-gpu $use_gpu --acwt 1.0 --post-decode-acwt 10.0 \
-			--scoring-opts "--min-lmwt 1" \
-			--nj ${nj} --cmd "$decode_cmd" --online-ivector-dir exp/nnet3_chain/ivectors_${test_set}_hires \
+			--scoring-opts "--min-lmwt 1" --frames_per_chunk 150 \
+			--nj ${nj} --num-threads ${nj} --cmd "$decode_cmd" --online-ivector-dir exp/nnet3_chain/ivectors_${test_set}_hires \
 			$dir/graph data/${test_set}_hires $dir/decode_${test_set:5} || exit 1;
 	done
 fi
