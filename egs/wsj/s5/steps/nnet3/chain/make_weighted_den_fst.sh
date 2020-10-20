@@ -118,6 +118,10 @@ for n in `seq 0 $[num_alignments-1]`; do
     exit 1
   fi
 
+  if [ "$this_num_repeats" -eq 0 ]; then
+    echo "--num-repeats=$this_num_repeats for alignment directory=$this_alignment_dir; skipping"
+		continue
+  fi
 
   if [ $stage -le 1 ]; then
     for j in $(seq $num_jobs); do gunzip -c $this_alignment_dir/ali.$j.gz; done | \
@@ -133,6 +137,10 @@ for n in `seq 0 $[num_alignments-1]`; do
 done
 
 if [ $stage -le 2 ]; then
+  echo "Calling: $cmd $dir/log/make_phone_lm_fst.log \
+    gunzip -c $all_phones \| \
+    chain-est-phone-lm $lm_opts ark:- $dir/phone_lm.fst"
+
   $cmd $dir/log/make_phone_lm_fst.log \
     gunzip -c $all_phones \| \
     chain-est-phone-lm $lm_opts ark:- $dir/phone_lm.fst || exit 1;
