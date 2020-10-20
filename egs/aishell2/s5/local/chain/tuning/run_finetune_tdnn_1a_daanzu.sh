@@ -21,20 +21,20 @@ num_gpus=1
 num_epochs=1
 # initial_effective_lrate=0.0005
 # final_effective_lrate=0.00002
-initial_effective_lrate=.00010
+initial_effective_lrate=.00025
 final_effective_lrate=.000025
 minibatch_size=128,64,32,16
 
 xent_regularize=0.1
 
 # Set to -5 to skip phone language model generation
-train_stage=-10
+train_stage=-4
 get_egs_stage=-10
 common_egs_dir=  # you can set this to use previously dumped egs.
 dropout_schedule='0,0@0.20,0.5@0.50,0'
 # frames_per_eg=150,110,100
 frames_per_eg=150,110,100,40
-phone_lm_scales=1,100
+phone_lm_scales=1,10
 primary_lr_factor=0.25
 
 # Set to exp/train_lats for alignment hack
@@ -165,9 +165,8 @@ if [ $stage -le 10 ]; then
   # tolerance used in chain egs generation using this lats should be 1 or 2 which is
   # (source_egs_tolerance/frame_subsampling_factor)
   # source_egs_tolerance = 5
-  chain_opts=(--chain.alignment-subsampling-factor=3 --chain.left-tolerance=7 --chain.right-tolerance=7)
+  chain_opts=(--chain.alignment-subsampling-factor=1 --chain.left-tolerance=1 --chain.right-tolerance=1)
 
-	train_stage=-4
   steps/nnet3/chain/train.py --stage $train_stage ${chain_opts[@]} \
     --cmd "$decode_cmd" \
     --trainer.input-model $dir/input.raw \
