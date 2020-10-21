@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 stage=1
-nj=10
+nj=20
 
 . ./cmd.sh
 . ./path.sh
@@ -15,6 +15,7 @@ if [ $stage -le 3 ]; then
 
 	# Prepare language model compatible with KAG
 	local/prepare_daanzu_lang.sh --model_dir kaldi_model/ --output_lang data/lang_nosp
+	cp -r data/lang_nosp data/lang
 
   local/format_lms.sh --src-dir data/lang_nosp data/local/lm
 fi
@@ -60,23 +61,23 @@ fi
 
 if [ $stage -le 10 ]; then
   steps/align_si.sh --nj 10 --cmd "$train_cmd" \
-                    data/train_10k data/lang_nosp exp/tri1 exp/tri1_ali_10k
+                    data/train data/lang_nosp exp/tri1 exp/tri1_ali
 
 
   # train an LDA+MLLT system.
   steps/train_lda_mllt.sh --cmd "$train_cmd" \
                           --splice-opts "--left-context=3 --right-context=3" 2500 15000 \
-                          data/train_10k data/lang_nosp exp/tri1_ali_10k exp/tri2b
+                          data/train data/lang_nosp exp/tri1_ali exp/tri2b
 fi
 
 if [ $stage -le 11 ]; then
   # Align a 10k utts subset using the tri2b model
   steps/align_si.sh  --nj 10 --cmd "$train_cmd" --use-graphs true \
-                     data/train_10k data/lang_nosp exp/tri2b exp/tri2b_ali_10k
+                     data/train data/lang_nosp exp/tri2b exp/tri2b_ali
 
   # Train tri3b, which is LDA+MLLT+SAT on 10k utts
   steps/train_sat.sh --cmd "$train_cmd" 2500 15000 \
-                     data/train_10k data/lang_nosp exp/tri2b_ali_10k exp/tri3b
+                     data/train data/lang_nosp exp/tri2b_ali exp/tri3b
 
 fi
 

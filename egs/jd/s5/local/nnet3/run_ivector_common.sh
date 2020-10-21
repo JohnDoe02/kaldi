@@ -87,7 +87,7 @@ if [ $stage -le 3 ]; then
   # now create a data subset.  60k is 1/5th of the training dataset (around 200 hours).
 
   #utils/subset_data_dir.sh data/${train_set}_sp_hires 60000 data/${train_set}_sp_hires_60k
-	cp -r data/${train_set}_sp_hires ${temp_data_root}/${train_set}_sp_hires_60k
+	cp -r data/${train_set}_sp_hires data/${train_set}_sp_hires_60k
 fi
 
 
