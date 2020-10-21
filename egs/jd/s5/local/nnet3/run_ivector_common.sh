@@ -70,7 +70,7 @@ if [ $stage -le 3 ]; then
     utils/create_split_dir.pl /export/b0{1,2,3,4}/$USER/kaldi-data/mfcc/librispeech-$(date +'%m_%d_%H_%M')/s5/$mfccdir/storage $mfccdir/storage
   fi
 
-  for datadir in ${train_set}_sp test_clean test_other dev_clean dev_other; do
+  for datadir in ${train_set}_sp; do
     utils/copy_data_dir.sh data/$datadir data/${datadir}_hires
   done
 
@@ -78,15 +78,16 @@ if [ $stage -le 3 ]; then
   # features; this helps make trained nnets more invariant to test data volume.
   utils/data/perturb_data_dir_volume.sh data/${train_set}_sp_hires
 
-  for datadir in ${train_set}_sp test_clean test_other dev_clean dev_other; do
+  for datadir in ${train_set}_sp; do
     steps/make_mfcc.sh --nj 70 --mfcc-config conf/mfcc_hires.conf \
       --cmd "$train_cmd" data/${datadir}_hires || exit 1;
     steps/compute_cmvn_stats.sh data/${datadir}_hires || exit 1;
     utils/fix_data_dir.sh data/${datadir}_hires
   done
-
   # now create a data subset.  60k is 1/5th of the training dataset (around 200 hours).
-  utils/subset_data_dir.sh data/${train_set}_sp_hires 60000 data/${train_set}_sp_hires_60k
+
+  #utils/subset_data_dir.sh data/${train_set}_sp_hires 60000 data/${train_set}_sp_hires_60k
+	cp -r data/${train_set}_sp_hires ${temp_data_root}/${train_set}_sp_hires_60k
 fi
 
 
@@ -98,8 +99,10 @@ if [ $stage -le 4 ]; then
 
   num_utts_total=$(wc -l <data/${train_set}_sp_hires/utt2spk)
   num_utts=$[$num_utts_total/100]
-  utils/data/subset_data_dir.sh data/${train_set}_sp_hires \
-     $num_utts ${temp_data_root}/${train_set}_sp_hires_subset
+  #utils/data/subset_data_dir.sh data/${train_set}_sp_hires \
+  #   $num_utts ${temp_data_root}/${train_set}_sp_hires_subset
+
+	cp -r data/${train_set}_sp_hires ${temp_data_root}/${train_set}_sp_hires_subset
 
   echo "$0: computing a PCA transform from the hires data."
   steps/online/nnet2/get_pca_transform.sh --cmd "$train_cmd" \
@@ -149,13 +152,13 @@ if [ $stage -le 6 ]; then
     $ivectordir || exit 1;
 fi
 
-if [ $stage -le 7 ]; then
-  echo "$0: extracting iVectors for dev and test data"
-  for data in test_clean test_other dev_clean dev_other; do
-    steps/online/nnet2/extract_ivectors_online.sh --cmd "$train_cmd" --nj 20 \
-      data/${data}_hires exp/nnet3${nnet3_affix}/extractor \
-      exp/nnet3${nnet3_affix}/ivectors_${data}_hires || exit 1;
-  done
-fi
+#if [ $stage -le 7 ]; then
+#  echo "$0: extracting iVectors for dev and test data"
+#  for data in test_clean test_other dev_clean dev_other; do
+#    steps/online/nnet2/extract_ivectors_online.sh --cmd "$train_cmd" --nj 20 \
+#      data/${data}_hires exp/nnet3${nnet3_affix}/extractor \
+#      exp/nnet3${nnet3_affix}/ivectors_${data}_hires || exit 1;
+#  done
+#fi
 
 exit 0;
