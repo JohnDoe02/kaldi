@@ -21,6 +21,9 @@ nnet3_affix=_cleaned     # affix for exp/nnet3 directory to put iVector stuff in
 . ./path.sh
 . ./utils/parse_options.sh
 
+echo "gmm is $gmm"
+echo "train_set is $train_set"
+
 gmm_dir=exp/${gmm}
 ali_dir=exp/${gmm}_ali_${train_set}_sp
 
@@ -35,7 +38,7 @@ if [ $stage -le 1 ]; then
   #Although the nnet will be trained by high resolution data, we still have to
   # perturb the normal data to get the alignment.  _sp stands for speed-perturbed
   echo "$0: preparing directory for low-resolution speed-perturbed data (for alignment)"
-  utils/data/perturb_data_dir_speed_3way.sh data/${train_set} data/${train_set}_sp
+  utils/data/perturb_data_dir_speed_3way.sh --always-include-prefix true data/${train_set} data/${train_set}_sp
   echo "$0: making MFCC features for low-resolution speed-perturbed data"
   steps/make_mfcc.sh --cmd "$train_cmd" --nj 50 data/${train_set}_sp || exit 1;
   steps/compute_cmvn_stats.sh data/${train_set}_sp || exit 1;

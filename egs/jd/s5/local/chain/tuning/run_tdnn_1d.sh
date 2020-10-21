@@ -128,8 +128,8 @@ set -e
 # configs for 'chain'
 stage=0
 decode_nj=50
-train_set=train_960_cleaned
-gmm=tri6b_cleaned
+train_set=train
+gmm=tri3b
 nnet3_affix=_cleaned
 
 # The rest are configs specific to this script.  Most of the parameters
