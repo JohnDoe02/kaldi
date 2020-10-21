@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
 
+librispeech_datasets=(dev-clean test-clean dev-other test-other train-clean-100)
+librispeech_url=www.openslr.org/resources/12
+librispeech=/mnt/copora/librispeech/
 stage=1
 nj=20
 
@@ -7,10 +10,8 @@ nj=20
 . ./path.sh
 . utils/parse_options.sh
 
-# you might not want to do this for interactive shells.
-#set -e
 
-if [ $stage -le 3 ]; then
+if [ $stage -le 1 ]; then
 	local/prepare_data.py
 
 	# Prepare language model compatible with KAG
@@ -20,8 +21,35 @@ if [ $stage -le 3 ]; then
   local/format_lms.sh --src-dir data/lang_nosp data/local/lm
 fi
 
+if [ $stage -le 2 ]; then
+  # download the data.  Note: we're using the 100 hour setup for
+  # now; later in the script we'll download more and use it to train neural
+  # nets.
+  for part in "${librispeech_datasets[@]}"; do
+    local/download_and_untar.sh $librispeech $librispeech_url $part
+  done
+
+  # ... and then combine the two sets into a 460 hour one
+  #utils/combine_data.sh \
+  #  data/train_clean_460 data/train_clean_100 data/train_clean_360
+
+  # download the LM resources
+  #local/download_lm.sh $lm_url data/local/lm
+fi
+
+if [ $stage -le 3 ]; then
+  # format the data as Kaldi data directories
+  for part in "${librispeech_datasets[@]}"; do
+    # use underscore-separated names in data directories.
+    local/data_prep.sh $librispeech/LibriSpeech/$part data/$(echo $part | sed s/-/_/g)
+  done
+fi
+
+# you might not want to do this for interactive shells.
+#set -e
+
 if [ $stage -le 6 ]; then
-  for part in train test_command test_dictation; do
+  for part in train test_command test_dictation "${librispeech_datasets[@]//-/_}"; do
     steps/make_mfcc.sh --cmd "$train_cmd" --nj ${nj} data/$part exp/make_mfcc/$part $mfccdir
     steps/compute_cmvn_stats.sh data/$part exp/make_mfcc/$part $mfccdir
   done
@@ -33,14 +61,23 @@ if [ $stage -le 7 ]; then
   # For the monophone stages we select the shortest utterances, which should make it
   # easier to align the data from a flat start.
 
-  utils/subset_data_dir.sh --shortest data/train 1000 data/train_1kshort
-  utils/subset_data_dir.sh data/train 5000 data/train_5k
+  utils/subset_data_dir.sh --shortest data/train 1000 data/jd_1kshort
+  utils/subset_data_dir.sh --shortest data/train_clean_100 1000 data/ls_1kshort
+	utils/combine_data.sh data/train_2kshort data/jd_1kshort data/ls_1kshort
+
+  utils/subset_data_dir.sh data/train 2500 data/jd_2.5k
+  utils/subset_data_dir.sh data/train_clean_100 2500 data/ls_2.5k
+	utils/combine_data.sh data/train_5k data/jd_2.5k data/ls_2.5k
+
+  utils/subset_data_dir.sh data/train 5000 data/jd_5k
+  utils/subset_data_dir.sh data/train_clean_100 5000 data/ls_5k
+	utils/combine_data.sh data/train_10k data/jd_5k data/ls_5k
 fi
 
 if [ $stage -le 8 ]; then
   # train a monophone system
   steps/train_mono.sh --boost-silence 1.25 --nj ${nj} --cmd "$train_cmd" \
-                      data/train_1kshort data/lang_nosp exp/mono
+                      data/train_2kshort data/lang_nosp exp/mono
 fi
 
 if false && [ $stage -le 9 ]; then
@@ -61,36 +98,36 @@ fi
 
 if [ $stage -le 10 ]; then
   steps/align_si.sh --nj 10 --cmd "$train_cmd" \
-                    data/train data/lang_nosp exp/tri1 exp/tri1_ali
+                    data/train_10k data/lang_nosp exp/tri1 exp/tri1_ali
 
 
   # train an LDA+MLLT system.
   steps/train_lda_mllt.sh --cmd "$train_cmd" \
                           --splice-opts "--left-context=3 --right-context=3" 2500 15000 \
-                          data/train data/lang_nosp exp/tri1_ali exp/tri2b
+                          data/train_10k data/lang_nosp exp/tri1_ali exp/tri2b
 fi
 
 if [ $stage -le 11 ]; then
   # Align a 10k utts subset using the tri2b model
   steps/align_si.sh  --nj 10 --cmd "$train_cmd" --use-graphs true \
-                     data/train data/lang_nosp exp/tri2b exp/tri2b_ali
+                     data/train_10k data/lang_nosp exp/tri2b exp/tri2b_ali
 
   # Train tri3b, which is LDA+MLLT+SAT on 10k utts
   steps/train_sat.sh --cmd "$train_cmd" 2500 15000 \
-                     data/train data/lang_nosp exp/tri2b_ali exp/tri3b
+                     data/train_10k data/lang_nosp exp/tri2b_ali exp/tri3b
 
 fi
 
 if [ $stage -le 19 ]; then
   # align the entire train_clean_100 subset using the tri3b model
   steps/align_fmllr.sh --nj 10 --cmd "$train_cmd" \
-    data/train data/lang_nosp \
+    data/train_10k data/lang_nosp \
     exp/tri3b exp/tri3b_ali_train
 fi
 
 if [ $stage -le 20 ]; then
   # train and test nnet3 tdnn models on the entire data with data-cleaning.
-  local/chain/run_tdnn.sh # set "--stage 11" if you have already run local/nnet3/run_tdnn.sh
+  local/chain/run_tdnn.sh --stage 15 # set "--stage 11" if you have already run local/nnet3/run_tdnn.sh
 fi
 
 exit 0

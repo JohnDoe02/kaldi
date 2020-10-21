@@ -3,6 +3,7 @@
 stage=0
 use_gpu=false
 
+train=data/train
 input_lang=data/input/
 output_lang=data/lang/
 model_dir=kaldi_model
@@ -47,7 +48,7 @@ fi
 if [ $stage -le 1 ]; then
   # Generate a simple grammar aka G.fst
   ngram-count -order $lm_order -write-vocab $tmp_lang/vocab-full.txt \
-              -wbdiscount -text data/train/corpus.txt -lm $tmp_lang/lm.arpa
+              -wbdiscount -text $train/corpus.txt -lm $tmp_lang/lm.arpa
   arpa2fst --disambig-symbol=\#0 --read-symbol-table=$output_lang/words.txt \
            $tmp_lang/lm.arpa $output_lang/G.fst
 

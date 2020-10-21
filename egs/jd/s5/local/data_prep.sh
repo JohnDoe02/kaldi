@@ -57,7 +57,10 @@ for reader_dir in $(find -L $src -mindepth 1 -maxdepth 1 -type d | sort); do
 
     chapter_trans=$chapter_dir/${reader}-${chapter}.trans.txt
     [ ! -f  $chapter_trans ] && echo "$0: expected file $chapter_trans to exist" && exit 1
-    cat $chapter_trans >>$trans
+
+		# Convert utterances to lowercase
+		# Note: This only works, because the utterance id's do not contain letters for librispeech
+		cat $chapter_trans | awk '{ print tolower($0) }' >>$trans
 
     # NOTE: For now we are using per-chapter utt2spk. That is each chapter is considered
     #       to be a different speaker. This is done for simplicity and because we want
