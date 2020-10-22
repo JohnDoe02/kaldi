@@ -52,7 +52,8 @@ for filename, directory in [train_file] + test_files:
                                names=["File", "Length", "Directory", "Recognition"])
 
     recordings["IDs"] = createRecordingIds(recordings["File"], recordings["Directory"])
-    recordings["Speaker"] = speaker + "-" + recordings["IDs"]
+    #It's essential here to prepend speaker after ID to avoid sorting issues with some kaldi tools
+    recordings["Speaker"] = recordings["IDs"] + "-" + speaker
 
     dataset = recordings.sort_values(by="IDs")
 

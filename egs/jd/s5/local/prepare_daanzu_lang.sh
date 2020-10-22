@@ -47,6 +47,10 @@ fi
 # Create a corresponding grammar and decoding graph
 if [ $stage -le 1 ]; then
   # Generate a simple grammar aka G.fst
+	if [ ! -f $train/corpus.txt ]; then
+		echo "corpus.txt not found. generating"
+		cat $train/text | awk '{$1=""; print $0}' | sed 's/^ *//' > $train/corpus.txt
+	fi
   ngram-count -order $lm_order -write-vocab $tmp_lang/vocab-full.txt \
               -wbdiscount -text $train/corpus.txt -lm $tmp_lang/lm.arpa
   arpa2fst --disambig-symbol=\#0 --read-symbol-table=$output_lang/words.txt \
