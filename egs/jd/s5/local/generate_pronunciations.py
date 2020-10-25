@@ -10,6 +10,7 @@ from io import open
 
 from six import PY2, text_type
 import requests
+import argparse
 
 try:
     # g2p_en==2.0.0
@@ -138,7 +139,6 @@ class Lexicon(object):
                         tokens = entry.strip().split()
                         assert re.match(word + r'(\(\d\))?', tokens[0], re.I)  # 'SEMI-COLON' or 'SEMI-COLON(2)'
                         phones = tokens[1:]
-                        print("generated pronunciation with cloud-cmudict for %r: CMU phones are %r" % (word, phones))
                         pronunciations.append(phones)
                     return pronunciations[0]
             except Exception as e:
@@ -164,12 +164,21 @@ def readCorpus(corpus):
 
     return words
     
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description='Generate phone representation for OOVs')
+    parser.add_argument('--corpus', help='path to corpus file')
+    parser.add_argument('--lexicon', help='path to lexicon')
+    parser.add_argument('--lexicon_oov', help="path to output lexicon for found OOVs")
 
-words_lexicon = readLexicon("kaldi_model/lexicon.txt")
-words_corpus = readCorpus("data/train/corpus.txt")
-diff = words_corpus.difference(words_lexicon)
+    args = parser.parse_args()
 
-lexicon = Lexicon([])
-for word in diff:
-    print(word, " ".join(lexicon.cmu_to_xsampa(lexicon.generate_pronunciations(word.replace("'", "")))))
+    words_lexicon = readLexicon(args.lexicon)
+    words_corpus = readCorpus(args.corpus)
+    diff = words_corpus.difference(words_lexicon)
+
+    with open(args.lexicon_oov, 'w') as f:
+        lexicon = Lexicon([])
+        for word in diff:
+            f.write(word + " " + " ".join(lexicon.cmu_to_xsampa(lexicon.generate_pronunciations(word.replace("'", "")))))
+            f.write("\n")
 
