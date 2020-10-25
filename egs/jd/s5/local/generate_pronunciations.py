@@ -12,11 +12,7 @@ from six import PY2, text_type
 import requests
 import argparse
 
-try:
-    # g2p_en==2.0.0
-    import g2p_en
-except ImportError:
-    g2p_en = None
+import g2p_en
 
 class Lexicon(object):
     def __init__(self, phones):
@@ -163,12 +159,17 @@ def readCorpus(corpus):
             words.update(line.split())
 
     return words
+
+def load_symbol_table(filename):
+    with open(filename, 'r', encoding='utf-8') as f:
+        return [[int(token) if token.isdigit() else token for token in line.strip().split()] for line in f]
     
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Generate phone representation for OOVs')
     parser.add_argument('--corpus', help='path to corpus file')
     parser.add_argument('--lexicon', help='path to lexicon')
     parser.add_argument('--lexicon_oov', help="path to output lexicon for found OOVs")
+    parser.add_argument('--phones', help="path to phone symbol table")
 
     args = parser.parse_args()
 
@@ -177,7 +178,8 @@ if __name__ == "__main__":
     diff = words_corpus.difference(words_lexicon)
 
     with open(args.lexicon_oov, 'w') as f:
-        lexicon = Lexicon([])
+        phone_to_int_dict = { phone: i for phone, i in load_symbol_table(args.phones) }
+        lexicon = Lexicon(phone_to_int_dict.keys())
         for word in diff:
             f.write(word + " " + " ".join(lexicon.cmu_to_xsampa(lexicon.generate_pronunciations(word.replace("'", "")))))
             f.write("\n")

@@ -37,7 +37,10 @@ if [ $stage -le 0 ]; then
 		echo "corpus.txt not found. generating"
 		cat $train/text | awk '{$1=""; print $0}' | sed 's/^ *//' > $train/corpus.txt
 	fi
-	./local/generate_pronunciations.py --lexicon ${model_dir}/lexicon.txt --corpus ${train}/corpus.txt --lexicon_oov ${input_lang}/oov.txt
+	./local/generate_pronunciations.py --lexicon ${model_dir}/lexicon.txt \
+																		 --corpus ${train}/corpus.txt \
+																		 --lexicon_oov ${input_lang}/oov.txt \
+																		 --phones ${input_lang}/phones.txt
 
 	sort $model_dir/lexicon.txt $model_dir/user_lexicon.txt $input_lang/oov.txt > $input_lang/lexicon.txt
   cat $model_dir/user_lexicon.txt $input_lang/oov.txt | sed "s/\(^['A-Za-z0-9-]*\)/\1 1.0/g" \
