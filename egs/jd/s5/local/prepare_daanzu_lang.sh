@@ -42,7 +42,9 @@ if [ $stage -le 0 ]; then
 																		 --lexicon_oov ${input_lang}/oov.txt \
 																		 --phones ${input_lang}/phones.txt
 
-	sort $model_dir/lexicon.txt $model_dir/user_lexicon.txt $input_lang/oov.txt > $input_lang/lexicon.txt
+	sort $model_dir/lexicon.txt $model_dir/user_lexicon.txt $input_lang/oov.txt \
+		 > $input_lang/lexicon.txt
+
   cat $model_dir/user_lexicon.txt $input_lang/oov.txt | sed "s/\(^['A-Za-z0-9-]*\)/\1 1.0/g" \
 																											| sort $model_dir/lexiconp.txt - \
 																											> $input_lang/lexiconp.txt
