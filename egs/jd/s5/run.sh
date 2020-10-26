@@ -10,9 +10,20 @@ nj=20
 . ./path.sh
 . utils/parse_options.sh
 
+# Checks if g2p_en (required for determining phones of OOVs) is installed
+python3 <<EOF
+import sys
+try:
+	import g2p_en
+except ImportError:
+	sys.exit(1)    
+
+sys.exit(0)
+EOF
+(($?)) && echo "g2p_en python3 library not available. please install." && exit 1
+
 if [ $stage -le 1 ]; then
 	local/prepare_data.py
-
 fi
 
 if [ $stage -le 2 ]; then
@@ -55,26 +66,46 @@ if [ $stage -le 6 ]; then
   # For the monophone stages we select the shortest utterances, which should make it
   # easier to align the data from a flat start.
 
-  utils/subset_data_dir.sh --shortest data/train 1000 data/jd_1kshort
+  utils/subset_data_dir.sh --shortest data/train_command 500 data/jd_command_500short
+  utils/subset_data_dir.sh --shortest data/train_dictation 500 data/jd_dictation_500short
   utils/subset_data_dir.sh --shortest data/train_clean_100 1000 data/ls_1kshort
-	utils/combine_data.sh data/train_2kshort data/jd_1kshort data/ls_1kshort
+	utils/combine_data.sh data/train_2kshort \
+		data/jd_command_500short data/jd_dictation_500short data/ls_1kshort
 
-  utils/subset_data_dir.sh data/train 2500 data/jd_2.5k
+  utils/subset_data_dir.sh data/train_command 1250 data/jd_command_1250
+  utils/subset_data_dir.sh data/train_dictation 1250 data/jd_dictation_1250
   utils/subset_data_dir.sh data/train_clean_100 2500 data/ls_2.5k
-	utils/combine_data.sh data/train_5k data/jd_2.5k data/ls_2.5k
+	utils/combine_data.sh data/train_5k data/jd_command_1250 data/jd_dictation_1250 data/ls_2.5k
 
-  utils/subset_data_dir.sh data/train 5000 data/jd_5k
+  utils/subset_data_dir.sh data/train_command 2500 data/jd_command_2500
+  utils/subset_data_dir.sh data/train_dictation 2500 data/jd_dictation_2500
   utils/subset_data_dir.sh data/train_clean_100 5000 data/ls_5k
-	utils/combine_data.sh data/train_10k data/jd_5k data/ls_5k
+	utils/combine_data.sh data/train_10k data/jd_command_2500 data/jd_dictation_2500 data/ls_5k
 
 	utils/combine_data.sh data/jd_ls_100_clean data/train data/train_clean_100
 fi
 
 if [ $stage -le 7 ]; then
+	[ ! -d data/local ] && mkdir -p data/local
+	[ -e data/local/corpus.txt ] && rm data/local/corpus.txt
+
+	echo "Generating corpus"
+  for datadir in train test_day-to-day test_command test_dictation "${librispeech_datasets[@]//-/_}"; do
+		if [ ! -f data/$datadir/corpus.txt ]; then
+			echo "corpus.txt not found in $datadir. generating"
+			cat data/$datadir/text | awk '{$1=""; print $0}' | sed 's/^ *//' > data/$datadir/corpus.txt
+		fi
+		cat data/$datadir/corpus.txt >> data/local/corpus.txt
+  done
+
+	echo "Preparing language model"
 	# Prepare language model compatible with KAG
 	local/prepare_daanzu_lang.sh --model_dir kaldi_model/ \
 															 --output_lang data/lang_nosp \
-															 --train data/jd_ls_100_clean
+															 --corpus data/local
+
+	# This copy is not really necessary
+	# only for simplifying compatibility with librispeech recipe
 	cp -r data/lang_nosp data/lang
 
   local/format_lms.sh --src-dir data/lang_nosp data/local/lm

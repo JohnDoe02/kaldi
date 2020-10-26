@@ -3,7 +3,7 @@
 stage=0
 use_gpu=false
 
-train=data/train
+corpus=data/corpus
 input_lang=data/input/
 output_lang=data/lang/
 model_dir=kaldi_model
@@ -33,11 +33,20 @@ if [ $stage -le 0 ]; then
                                           | sort -u > $input_lang/nonsilence_phones.txt
   cp $model_dir/phones.txt $input_lang
 #  cp $model_dir/nonterminals.txt $input_lang
-  sort $model_dir/lexicon.txt $model_dir/user_lexicon.txt > $input_lang/lexicon.txt
-  cat $model_dir/user_lexicon.txt | sed "s/\(^['A-Za-z0-9-]*\)/\1 1.0/g" \
-                                  | sort $model_dir/lexiconp.txt - > $input_lang/lexiconp.txt
+	sort $model_dir/lexicon.txt $model_dir/user_lexicon.txt \
+		 > $input_lang/lexicon_tmp.txt
 
-  sort $model_dir/lexiconp_disambig.txt > $input_lang/lexiconp_disambig.txt
+	./local/generate_pronunciations.py --lexicon ${input_lang}/lexicon_tmp.txt \
+																		 --corpus ${corpus}/corpus.txt \
+																		 --phones ${input_lang}/phones.txt \
+																		 --lexicon_oov ${input_lang}/oov.txt
+
+	sort $model_dir/lexicon.txt $model_dir/user_lexicon.txt $input_lang/oov.txt \
+		 > $input_lang/lexicon.txt
+
+  cat $model_dir/user_lexicon.txt $input_lang/oov.txt | sed "s/\(^['A-Za-z0-9-]*\)/\1 1.0/g" \
+																											| sort $model_dir/lexiconp.txt - \
+																											> $input_lang/lexiconp.txt
 
   # Generate language model aka L.fst/L_disambig.fst
   utils/prepare_lang.sh --phone-symbol-table $input_lang/phones.txt \
@@ -47,12 +56,9 @@ fi
 # Create a corresponding grammar and decoding graph
 if [ $stage -le 1 ]; then
   # Generate a simple grammar aka G.fst
-	if [ ! -f $train/corpus.txt ]; then
-		echo "corpus.txt not found. generating"
-		cat $train/text | awk '{$1=""; print $0}' | sed 's/^ *//' > $train/corpus.txt
-	fi
+
   ngram-count -order $lm_order -write-vocab $tmp_lang/vocab-full.txt \
-              -wbdiscount -text $train/corpus.txt -lm $tmp_lang/lm.arpa
+              -wbdiscount -text $corpus/corpus.txt -lm $tmp_lang/lm.arpa
   arpa2fst --disambig-symbol=\#0 --read-symbol-table=$output_lang/words.txt \
            $tmp_lang/lm.arpa $output_lang/G.fst
 
