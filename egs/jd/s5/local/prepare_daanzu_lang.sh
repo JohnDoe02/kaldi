@@ -33,10 +33,13 @@ if [ $stage -le 0 ]; then
                                           | sort -u > $input_lang/nonsilence_phones.txt
   cp $model_dir/phones.txt $input_lang
 #  cp $model_dir/nonterminals.txt $input_lang
-	./local/generate_pronunciations.py --lexicon ${model_dir}/lexicon.txt \
+	sort $model_dir/lexicon.txt $model_dir/user_lexicon.txt \
+		 > $input_lang/lexicon_tmp.txt
+
+	./local/generate_pronunciations.py --lexicon ${input_lang}/lexicon_tmp.txt \
 																		 --corpus ${corpus}/corpus.txt \
-																		 --lexicon_oov ${input_lang}/oov.txt \
-																		 --phones ${input_lang}/phones.txt
+																		 --phones ${input_lang}/phones.txt \
+																		 --lexicon_oov ${input_lang}/oov.txt
 
 	sort $model_dir/lexicon.txt $model_dir/user_lexicon.txt $input_lang/oov.txt \
 		 > $input_lang/lexicon.txt
