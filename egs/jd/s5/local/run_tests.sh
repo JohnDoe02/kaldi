@@ -13,11 +13,11 @@ nj=10
 
 
 if [ $stage -le 0 ]; then
-	for test_set in data/test_* ; do
+	for test_set in train ; do
 		if [[ "$test_set" =~ "_hires" ]]; then
 			continue
 		fi
-		test_set=${test_set:5}
+		#test_set=${test_set:5}
 
 		echo "$0: creating high-resolution MFCC features for directory: ${test_set}"
 		mfccdir=data/${test_set}_hires/data
@@ -35,16 +35,16 @@ if [ $stage -le 0 ]; then
 fi
 
 if [ $stage -le 1 ]; then
-	for test_set in data/test_*; do
+	for test_set in train; do
 		if [[ "$test_set" =~ "_hires" ]]; then
 			continue
 		fi
-		test_set=${test_set:5}
+		#test_set=${test_set:5}
 
 		# Note: it might appear that this $lang directory is mismatched, and it is as
 		# far as the 'topo' is concerned, but this script doesn't read the 'topo' from
 		# the lang directory.
-		utils/mkgraph.sh --self-loop-scale 1.0 data/lang $dir $dir/graph
+		utils/mkgraph.sh --self-loop-scale 1.0 data/lang_nosp $dir $dir/graph
 		steps/nnet3/decode.sh --use-gpu $use_gpu --acwt 1.0 --post-decode-acwt 10.0 \
 			--scoring-opts "--min-lmwt 1" --frames_per_chunk 150 \
 			--nj ${nj} --num-threads ${nj} --cmd "$decode_cmd" --online-ivector-dir $dir/ivectors_${test_set}_hires \
