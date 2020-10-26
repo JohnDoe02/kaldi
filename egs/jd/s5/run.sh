@@ -10,6 +10,18 @@ nj=20
 . ./path.sh
 . utils/parse_options.sh
 
+# Checks if g2p_en (required for determining phones of OOVs) is installed
+test_g2p=`python3 <<EOF
+import sys
+try:
+	import g2p_en
+except ImportError:
+	sys.exit(1)    
+
+sys.exit(0)
+EOF`
+(($?)) && echo "g2p_en python3 library not available. please install." && exit 1
+
 if [ $stage -le 1 ]; then
 	local/prepare_data.py
 
