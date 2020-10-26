@@ -66,17 +66,21 @@ if [ $stage -le 6 ]; then
   # For the monophone stages we select the shortest utterances, which should make it
   # easier to align the data from a flat start.
 
-  utils/subset_data_dir.sh --shortest data/train 1000 data/jd_1kshort
+  utils/subset_data_dir.sh --shortest data/train_command 500 data/jd_command_500short
+  utils/subset_data_dir.sh --shortest data/train_dictation 500 data/jd_dictation_500short
   utils/subset_data_dir.sh --shortest data/train_clean_100 1000 data/ls_1kshort
-	utils/combine_data.sh data/train_2kshort data/jd_1kshort data/ls_1kshort
+	utils/combine_data.sh data/train_2kshort \
+		data/jd_command_500short data/jd_dictation_500short data/ls_1kshort
 
-  utils/subset_data_dir.sh data/train 2500 data/jd_2.5k
+  utils/subset_data_dir.sh data/train_command 1250 data/jd_command_1250
+  utils/subset_data_dir.sh data/train_dictation 1250 data/jd_dictation_1250
   utils/subset_data_dir.sh data/train_clean_100 2500 data/ls_2.5k
-	utils/combine_data.sh data/train_5k data/jd_2.5k data/ls_2.5k
+	utils/combine_data.sh data/train_5k data/jd_command_1250 data/jd_dictation_1250 data/ls_2.5k
 
-  utils/subset_data_dir.sh data/train 5000 data/jd_5k
+  utils/subset_data_dir.sh data/train_command 2500 data/jd_command_2500
+  utils/subset_data_dir.sh data/train_dictation 2500 data/jd_dictation_2500
   utils/subset_data_dir.sh data/train_clean_100 5000 data/ls_5k
-	utils/combine_data.sh data/train_10k data/jd_5k data/ls_5k
+	utils/combine_data.sh data/train_10k data/jd_command_2500 data/jd_dictation_2500 data/ls_5k
 
 	utils/combine_data.sh data/jd_ls_100_clean data/train data/train_clean_100
 fi
