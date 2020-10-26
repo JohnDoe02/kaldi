@@ -54,7 +54,8 @@ fi
 #set -e
 
 if [ $stage -le 5 ]; then
-  for part in train test_command test_dictation "${librispeech_datasets[@]//-/_}"; do
+  for part in train_command train_dictation train_day-to-day "${librispeech_datasets[@]//-/_}"; do
+
     steps/make_mfcc.sh --cmd "$train_cmd" --nj ${nj} data/$part exp/make_mfcc/$part $mfccdir
     steps/compute_cmvn_stats.sh data/$part exp/make_mfcc/$part $mfccdir
   done
@@ -82,7 +83,7 @@ if [ $stage -le 6 ]; then
   utils/subset_data_dir.sh data/train_clean_100 5000 data/ls_5k
 	utils/combine_data.sh data/train_10k data/jd_command_2500 data/jd_dictation_2500 data/ls_5k
 
-	utils/combine_data.sh data/jd_ls_100_clean data/train data/train_clean_100
+	utils/combine_data.sh data/jd_ls_100_clean data/train_command data/train_dictation data/train_day-to-day data/train_clean_100
 fi
 
 if [ $stage -le 7 ]; then
@@ -125,7 +126,7 @@ fi
 
 
 if [ $stage -le 9 ]; then
-  steps/align_si.sh --boost-silence 1.25 --nj 10 --cmd "$train_cmd" \
+  steps/align_si.sh --boost-silence 1.25 --nj ${nj} --cmd "$train_cmd" \
                     data/train_5k data/lang_nosp exp/mono exp/mono_ali_5k
 
   # train a first delta + delta-delta triphone system on a subset of 5000 utterances
@@ -134,7 +135,7 @@ if [ $stage -le 9 ]; then
 fi
 
 if [ $stage -le 10 ]; then
-  steps/align_si.sh --nj 10 --cmd "$train_cmd" \
+  steps/align_si.sh --nj ${nj} --cmd "$train_cmd" \
                     data/train_10k data/lang_nosp exp/tri1 exp/tri1_ali
 
 
@@ -146,7 +147,7 @@ fi
 
 if [ $stage -le 11 ]; then
   # Align a 10k utts subset using the tri2b model
-  steps/align_si.sh  --nj 10 --cmd "$train_cmd" --use-graphs true \
+  steps/align_si.sh  --nj ${nj} --cmd "$train_cmd" --use-graphs true \
                      data/train_10k data/lang_nosp exp/tri2b exp/tri2b_ali
 
   # Train tri3b, which is LDA+MLLT+SAT on 10k utts
@@ -157,7 +158,7 @@ fi
 
 if [ $stage -le 12 ]; then
   # align the entire train_clean_100 subset using the tri3b model
-  steps/align_fmllr.sh --nj 10 --cmd "$train_cmd" \
+  steps/align_fmllr.sh --nj ${nj} --cmd "$train_cmd" \
     data/jd_ls_100_clean data/lang_nosp \
     exp/tri3b exp/tri3b_ali_clean_100
 

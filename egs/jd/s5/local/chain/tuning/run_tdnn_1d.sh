@@ -292,6 +292,10 @@ if [ $stage -le 15 ]; then
 
 fi
 
+if [ -f .poweroff ]; then
+	sudo poweroff
+fi
+
 graph_dir=$dir/graph_tgsmall
 if [ $stage -le 16 ]; then
   # Note: it might appear that this $lang directory is mismatched, and it is as
