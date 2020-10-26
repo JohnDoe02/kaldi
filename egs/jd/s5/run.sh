@@ -99,6 +99,9 @@ if [ $stage -le 7 ]; then
 	local/prepare_daanzu_lang.sh --model_dir kaldi_model/ \
 															 --output_lang data/lang_nosp \
 															 --corpus data/local
+
+	# This copy is not really necessary
+	# only for simplifying compatibility with librispeech recipe
 	cp -r data/lang_nosp data/lang
 
   local/format_lms.sh --src-dir data/lang_nosp data/local/lm
