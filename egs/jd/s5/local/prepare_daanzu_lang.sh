@@ -33,10 +33,6 @@ if [ $stage -le 0 ]; then
                                           | sort -u > $input_lang/nonsilence_phones.txt
   cp $model_dir/phones.txt $input_lang
 #  cp $model_dir/nonterminals.txt $input_lang
-	if [ ! -f $corpus/corpus.txt ]; then
-		echo "corpus.txt not found. generating"
-		cat $corpus/text | awk '{$1=""; print $0}' | sed 's/^ *//' > $corpus/corpus.txt
-	fi
 	./local/generate_pronunciations.py --lexicon ${model_dir}/lexicon.txt \
 																		 --corpus ${corpus}/corpus.txt \
 																		 --lexicon_oov ${input_lang}/oov.txt \
