@@ -181,6 +181,7 @@ if __name__ == "__main__":
         phone_to_int_dict = { phone: i for phone, i in load_symbol_table(args.phones) }
         lexicon = Lexicon(phone_to_int_dict.keys())
         for word in diff:
-            f.write(word + " " + " ".join(lexicon.cmu_to_xsampa(lexicon.generate_pronunciations(word.replace("'", "")))))
+            pronunciation=lexicon.generate_pronunciations(word.replace("'", ""))
+            f.write(word + " " + " ".join(lexicon.cmu_to_xsampa(pronunciation)))
             f.write("\n")
 

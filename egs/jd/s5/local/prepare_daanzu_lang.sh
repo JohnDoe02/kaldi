@@ -3,7 +3,7 @@
 stage=0
 use_gpu=false
 
-train=data/train
+corpus=data/corpus
 input_lang=data/input/
 output_lang=data/lang/
 model_dir=kaldi_model
@@ -33,12 +33,12 @@ if [ $stage -le 0 ]; then
                                           | sort -u > $input_lang/nonsilence_phones.txt
   cp $model_dir/phones.txt $input_lang
 #  cp $model_dir/nonterminals.txt $input_lang
-	if [ ! -f $train/corpus.txt ]; then
+	if [ ! -f $corpus/corpus.txt ]; then
 		echo "corpus.txt not found. generating"
-		cat $train/text | awk '{$1=""; print $0}' | sed 's/^ *//' > $train/corpus.txt
+		cat $corpus/text | awk '{$1=""; print $0}' | sed 's/^ *//' > $corpus/corpus.txt
 	fi
 	./local/generate_pronunciations.py --lexicon ${model_dir}/lexicon.txt \
-																		 --corpus ${train}/corpus.txt \
+																		 --corpus ${corpus}/corpus.txt \
 																		 --lexicon_oov ${input_lang}/oov.txt \
 																		 --phones ${input_lang}/phones.txt
 
@@ -59,7 +59,7 @@ if [ $stage -le 1 ]; then
   # Generate a simple grammar aka G.fst
 
   ngram-count -order $lm_order -write-vocab $tmp_lang/vocab-full.txt \
-              -wbdiscount -text $train/corpus.txt -lm $tmp_lang/lm.arpa
+              -wbdiscount -text $corpus/corpus.txt -lm $tmp_lang/lm.arpa
   arpa2fst --disambig-symbol=\#0 --read-symbol-table=$output_lang/words.txt \
            $tmp_lang/lm.arpa $output_lang/G.fst
 

@@ -11,7 +11,7 @@ nj=20
 . utils/parse_options.sh
 
 # Checks if g2p_en (required for determining phones of OOVs) is installed
-test_g2p=`python3 <<EOF
+python3 <<EOF
 import sys
 try:
 	import g2p_en
@@ -19,12 +19,11 @@ except ImportError:
 	sys.exit(1)    
 
 sys.exit(0)
-EOF`
+EOF
 (($?)) && echo "g2p_en python3 library not available. please install." && exit 1
 
 if [ $stage -le 1 ]; then
 	local/prepare_data.py
-
 fi
 
 if [ $stage -le 2 ]; then
@@ -83,10 +82,23 @@ if [ $stage -le 6 ]; then
 fi
 
 if [ $stage -le 7 ]; then
+	[ ! -d data/local ] && mkdir -p data/local
+	[ -e data/local/corpus.txt ] && rm data/local/corpus.txt
+
+	echo "Generating corpus"
+  for datadir in train test_day-to-day test_command test_dictation "${librispeech_datasets[@]//-/_}"; do
+		if [ ! -f data/$datadir/corpus.txt ]; then
+			echo "corpus.txt not found in $datadir. generating"
+			cat data/$datadir/text | awk '{$1=""; print $0}' | sed 's/^ *//' > data/$datadir/corpus.txt
+		fi
+		cat data/$datadir/corpus.txt >> data/local/corpus.txt
+  done
+
+	echo "Preparing language model"
 	# Prepare language model compatible with KAG
 	local/prepare_daanzu_lang.sh --model_dir kaldi_model/ \
 															 --output_lang data/lang_nosp \
-															 --train data/jd_ls_100_clean
+															 --corpus data/local
 	cp -r data/lang_nosp data/lang
 
   local/format_lms.sh --src-dir data/lang_nosp data/local/lm
