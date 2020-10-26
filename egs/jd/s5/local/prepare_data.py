@@ -42,10 +42,12 @@ def writeSpeakerToUtterance(stu_file, speakers, ids):
     f.close()
 
 train_file = ("dataset.tsv", "train")
+train_files = [(filename, filename.replace(".tsv", ""))
+                for filename in os.listdir('dataset/') if filename.startswith("train_")]
 test_files = [(filename, filename.replace(".tsv", ""))
                 for filename in os.listdir('dataset/') if filename.startswith("test_")]
 
-for filename, directory in [train_file] + test_files:
+for filename, directory in [train_file] + test_files + train_files:
     speaker = "speaker"
     gender = "m"
     recordings = pd.read_table("dataset/" + filename, header=0, 
