@@ -141,7 +141,7 @@ get_egs_stage=-10
 decode_iter=
 
 # TDNN options
-frames_per_eg=150,110,100
+frames_per_eg=150,110,100,40
 remove_egs=true
 common_egs_dir=
 xent_regularize=0.1
@@ -260,7 +260,7 @@ if [ $stage -le 15 ]; then
      /export/b{09,10,11,12}/$USER/kaldi-data/egs/swbd-$(date +'%m_%d_%H_%M')/s5c/$dir/egs/storage $dir/egs/storage
   fi
 
-	train_stage=-2
+	#train_stage=358
   steps/nnet3/chain/train.py --stage $train_stage \
     --cmd "$decode_cmd" \
     --feat.online-ivector-dir $train_ivector_dir \
@@ -292,7 +292,8 @@ if [ $stage -le 15 ]; then
 
 fi
 
-if [ -f .poweroff ]; then
+if [ -f ".poweroff" ]; then
+	echo "calling poweroff"
 	sudo poweroff
 fi
 

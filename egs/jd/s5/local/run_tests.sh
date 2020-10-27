@@ -13,11 +13,11 @@ nj=10
 
 
 if [ $stage -le 0 ]; then
-	for test_set in train ; do
+	for test_set in data/test_* ; do
 		if [[ "$test_set" =~ "_hires" ]]; then
 			continue
 		fi
-		#test_set=${test_set:5}
+		test_set=${test_set:5}
 
 		echo "$0: creating high-resolution MFCC features for directory: ${test_set}"
 		mfccdir=data/${test_set}_hires/data
@@ -35,11 +35,11 @@ if [ $stage -le 0 ]; then
 fi
 
 if [ $stage -le 1 ]; then
-	for test_set in train; do
+	for test_set in data/test_*; do
 		if [[ "$test_set" =~ "_hires" ]]; then
 			continue
 		fi
-		#test_set=${test_set:5}
+		test_set=${test_set:5}
 
 		# Note: it might appear that this $lang directory is mismatched, and it is as
 		# far as the 'topo' is concerned, but this script doesn't read the 'topo' from
