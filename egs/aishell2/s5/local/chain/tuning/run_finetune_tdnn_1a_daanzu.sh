@@ -28,13 +28,15 @@ minibatch_size=128,64,32,16
 xent_regularize=0.1
 
 # Set to -5 to skip phone language model generation
+# Set to -4 to skip denominator fst generation
+# Set to -2 to skip egs generation
 train_stage=-4
 get_egs_stage=-10
 common_egs_dir=  # you can set this to use previously dumped egs.
 dropout_schedule='0,0@0.20,0.5@0.50,0'
 # frames_per_eg=150,110,100
 frames_per_eg=150,110,100,40
-phone_lm_scales=1,10
+phone_lm_scales=1,100
 primary_lr_factor=0.25
 
 # Set to exp/train_lats for alignment hack

@@ -4,7 +4,7 @@
 # Set this to somewhere where you want to put your data, or where
 # someone else has already put it.  You'll want to change this
 # if you're not on the CLSP grid.
-data=../../../../export/librispeech
+data=/mnt/export/librispeech/data
 
 # base url for downloads.
 data_url=www.openslr.org/resources/12
@@ -244,6 +244,13 @@ if [ $stage -le 18 ]; then
   # decode using the tri6b model
   utils/mkgraph.sh data/lang_test_tgsmall \
                    exp/tri6b exp/tri6b/graph_tgsmall
+fi
+
+
+if [ $stage -le 19 ]; then
+  # decode using the tri6b model
+  utils/mkgraph.sh data/lang_test_tgsmall \
+                   exp/tri6b exp/tri6b/graph_tgsmall
   for test in test_clean test_other dev_clean dev_other; do
       steps/decode_fmllr.sh --nj 20 --cmd "$decode_cmd" \
                             exp/tri6b/graph_tgsmall data/$test exp/tri6b/decode_tgsmall_$test
@@ -258,8 +265,7 @@ if [ $stage -le 18 ]; then
   done
 fi
 
-
-if [ $stage -le 19 ]; then
+if [ $stage -le 20 ]; then
   # this does some data-cleaning. The cleaned data should be useful when we add
   # the neural net and chain systems.  (although actually it was pretty clean already.)
   local/run_cleanup_segmentation.sh
@@ -286,9 +292,9 @@ fi
 #     --rnnlm-tag "h150-me3-400-nce20" $data data/local/lm
 
 
-if [ $stage -le 20 ]; then
+if [ $stage -le 21 ]; then
   # train and test nnet3 tdnn models on the entire data with data-cleaning.
-  local/chain/run_tdnn.sh # set "--stage 11" if you have already run local/nnet3/run_tdnn.sh
+  local/chain/run_tdnn.sh  --stage 15 # set "--stage 11" if you have already run local/nnet3/run_tdnn.sh
 fi
 
 # The nnet3 TDNN recipe:

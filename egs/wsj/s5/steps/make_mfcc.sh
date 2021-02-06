@@ -187,7 +187,7 @@ fi
 if (( nf < nu - nu/20 )); then
   echo "$0: Less than 95% the features were successfully generated."\
        "Probably a serious error."
-  exit 1
+#  exit 1
 fi
 
 
