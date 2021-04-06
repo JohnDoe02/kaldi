@@ -182,6 +182,9 @@ if __name__ == "__main__":
         lexicon = Lexicon(phone_to_int_dict.keys())
         for word in diff:
             pronunciation=lexicon.generate_pronunciations(word.replace("'", ""))
-            f.write(word + " " + " ".join(lexicon.cmu_to_xsampa(pronunciation)))
-            f.write("\n")
+            try:
+                f.write(word + " " + " ".join(lexicon.cmu_to_xsampa(pronunciation)))
+                f.write("\n")
+            except KeyError:
+                print(f"Processing failed for {word} : {pronunciation}")
 
