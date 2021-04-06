@@ -97,7 +97,7 @@ if [ $stage -le 5 ]; then
 fi
 
 if [ $stage -le 6 ]; then
-  > misrecognitions.log
+  > $misrecognitions
 
 	for decode_set in data/decode_*; do
 		if [[ "$decode_set" =~ "_hires" ]]; then
@@ -106,8 +106,8 @@ if [ $stage -le 6 ]; then
     cat ${decode_set}/scoring_kaldi/wer_details/per_utt \
       | grep -e " op *I\|S\|D" -B 2 \
       | cut -b 9- \
-      | sed "s/\(.*\)_[0-9]\{6\}-\([a-z0-9-]*\)/\2\ \1.wav/g" \
-      >> misrecognitions.log
+      | sed "s/\(.*_[0-9]\{6\}\)-\([a-z0-9-]*\)/\2 \1/g" \
+      >> $misrecognitions
 
 	done
 fi
